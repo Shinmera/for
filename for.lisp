@@ -6,7 +6,7 @@
 
 (in-package #:org.shirakumo.for)
 
-(defmacro with-loop-tagbody (() &body body)
+(defmacro with-for-tagbody (() &body body)
   (let ((for-start (gensym "FOR-START"))
         (for-end (gensym "FOR-END")))
     `(tagbody
@@ -17,7 +17,7 @@
           (go ,for-start))
         ,for-end)))
 
-(defmacro with-loop-block (() &body body)
+(defmacro with-for-block (() &body body)
   `(block NIL
      (macrolet ((return-for (&rest values) `(return ,@values)))
        ,@body)))
@@ -25,8 +25,8 @@
 (defmacro for (bindings &body body)
   (multiple-value-bind (vars forms) (convert-bindings bindings)
     `(let* ,vars
-       (with-loop-block ()
-         (with-loop-tagbody ()
+       (with-for-block ()
+         (with-for-tagbody ()
            ,@forms
            (with-clauses ()
              ,@body))))))
