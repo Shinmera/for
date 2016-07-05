@@ -6,21 +6,34 @@
 
 (in-package #:org.shirakumo.for)
 
-(defclass iterator ()
-  ((object :initarg :object :accessor object)))
-
 (defgeneric has-more (iterator))
 (defgeneric next (iterator))
+(defgeneric current (iterator))
+(defgeneric (setf current) (value iterator))
 (defgeneric make-iterator (object &key &allow-other-keys))
+
+(defclass iterator ()
+  ((object :initarg :object :accessor object)
+   (current :accessor current)))
+
+(defmethod next :around ((iterator iterator))
+  (setf (current iterator) (call-next-method)))
 
 (defclass list-iterator (iterator)
   ())
 
+(defmethod initialize-instance :after ((iterator list-iterator) &key object)
+  (setf (object iterator) (cons NIL object)))
+
 (defmethod has-more ((iterator list-iterator))
-  (object iterator))
+  (cdr (object iterator)))
 
 (defmethod next ((iterator list-iterator))
-  (pop (object iterator)))
+  (setf (object iterator) (cdr (object iterator)))
+  (car (object iterator)))
+
+(defmethod (setf current) (value (iterator list-iterator))
+  (setf (car (object iterator)) value))
 
 (defmethod make-iterator ((list list) &key)
   (make-instance 'list-iterator :object list))
@@ -35,6 +48,9 @@
 (defmethod next ((iterator vector-iterator))
   (prog1 (aref (object iterator) (start iterator))
     (incf (start iterator))))
+
+(defmethod (setf current) (value (iterator vector-iterator))
+  (setf (aref (object iterator) (1- (start iterator))) value))
 
 (defmethod make-iterator ((vector vector) &key (start 0))
   (make-instance 'vector-iterator :object vector :start start))
@@ -51,6 +67,9 @@
 (defmethod next ((iterator array-iterator))
   (prog1 (row-major-aref (object iterator) (start iterator))
     (incf (start iterator))))
+
+(defmethod (setf current) (value (iterator array-iterator))
+  (setf (row-major-aref (object iterator) (1- (start iterator))) value))
 
 (defmethod make-iterator ((array array) &key (start 0))
   (make-instance 'array-iterator :object array :start start))
@@ -73,6 +92,15 @@
   (prog1 (aref (buffer iterator) (index iterator))
     (incf (index iterator))))
 
+(defmethod (setf current) ((value integer) (iterator stream-iterator))
+  (write-byte value (object iterator)))
+
+(defmethod (setf current) ((value character) (iterator stream-iterator))
+  (write-char value (object iterator)))
+
+(defmethod (setf current) ((value sequence) (iterator stream-iterator))
+  (write-sequence value (object iterator)))
+
 (defmethod make-iterator ((stream stream) &key (buffer-size 4096))
   (make-instance 'stream-iterator :object stream :buffer-size buffer-size))
 
@@ -80,7 +108,7 @@
   ())
 
 (defmethod initialize-instance :after ((iterator directory-iterator) &key pathname)
-  (setf (object iterator) (directory pathname)))
+  (setf (object iterator) (cons NIL (directory pathname))))
 
 (defmethod make-iterator ((pathname pathname) &key)
   (make-instance 'directory-iterator :object pathname))
@@ -152,6 +180,9 @@
          (multiple-value-bind (more key val) (funcall (object iterator))
            (declare (ignore more))
            (list key val)))))
+
+(defmethod (setf current) (value (iterator hash-table-iterator))
+  (setf (gethash (first (current iterator)) (object iterator)) value))
 
 (defmethod make-iterator ((hash-table hash-table) &key)
   (make-instance 'hash-table-iterator :object hash-table))
