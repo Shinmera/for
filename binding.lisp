@@ -50,7 +50,7 @@
         for (symb init) = (enlist var)
         collect (list symb (list 'quote init))))
 
-(defmacro define-binding (name (var &rest args) &body body)
+(defmacro define-form-binding (name (var &rest args) &body body)
   (let* ((var (enlist var))
          (aux (lambda-fiddle:collect-for-keyword '&aux args))
          (aux-gens (loop for var in aux collect `(gensym ,(string (delist var)))))
@@ -58,14 +58,14 @@
     `(define-direct-binding ,name (,(first var)
                                    ,@(lambda-fiddle:remove-aux-part args))
        (let ,(mapcar #'list aux-gen-gens aux-gens)
-         (values (list
-                  ,@(loop for var in aux for gen in aux-gen-gens
-                          collect `(list ,gen ,(translate-form-vars (delist var #'second) aux aux-gen-gens)))
-                  (list ,@var))
+         (values `(let* ,(list
+                          ,@(loop for var in aux for gen in aux-gen-gens
+                                  collect `(list ,gen ,(translate-form-vars (delist var #'second) aux aux-gen-gens)))
+                          (list ,@var)))
                  (let ,(bindings-for-gens aux aux-gen-gens)
                    ,@body))))))
 
-(defmacro define-simple-binding (name (var &rest args) &body body)
+(defmacro define-value-binding (name (var &rest args) &body body)
   (let* ((var (enlist var))
          (vars (lambda-fiddle:extract-lambda-vars (lambda-fiddle:remove-aux-part args)))
          (vars-gens (loop for var in vars collect `(gensym ,(string (delist var)))))
@@ -79,20 +79,20 @@
                                    ,@(lambda-fiddle:remove-aux-part args))
        (let (,@(mapcar #'list aux-gen-gens aux-gens)
              ,@(mapcar #'list vars-gen-gens vars-gens))
-         (values (list
-                  ,@(loop for var in vars for gen in vars-gen-gens
-                          collect `(list ,gen ,var))
-                  ,@(loop for var in aux for gen in aux-gen-gens
-                          collect `(list ,gen ,(translate-form-vars (delist var #'second) all all-gen-gens)))
-                  (list ,(first var) ',(translate-form-vars (delist var #'second) all all-gen-gens)))
+         (values `(let* ,(list
+                          ,@(loop for var in vars for gen in vars-gen-gens
+                                  collect `(list ,gen ,var))
+                          ,@(loop for var in aux for gen in aux-gen-gens
+                                  collect `(list ,gen ,(translate-form-vars (delist var #'second) all all-gen-gens)))
+                          (list ,(first var) ',(translate-form-vars (delist var #'second) all all-gen-gens))))
                  (let (,@(bindings-for-gens aux aux-gen-gens)
                        ,@(bindings-for-gens vars vars-gen-gens))
                    ,@body))))))
 
 (defun convert-bindings (bindings)
   (loop for (var type . args) in bindings
-        for (bindings forms) = (multiple-value-list
-                                (apply (binding type) var args))
-        append bindings into all-bindings
+        for (surrounding forms) = (multiple-value-list
+                                   (apply (binding type) var args))
+        collect surrounding into all-surrounding
         collect forms into all-forms
-        finally (return (values all-bindings all-forms))))
+        finally (return (values all-surrounding all-forms))))

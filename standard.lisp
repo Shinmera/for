@@ -28,7 +28,7 @@
                   for gen in gens
                   collect `(setf ,var ,gen)))))))
 
-(define-simple-binding in (var list &key by)
+(define-value-binding in (var list &key by)
   `(cond (,list
           ,(if by
                `(progn (update ,var (car ,list))
@@ -37,12 +37,12 @@
          (T
           (end-for))))
 
-(define-simple-binding across (var vector &aux (i -1) (length (length vector)))
+(define-value-binding across (var vector &aux (i -1) (length (length vector)))
   `(if (= ,length (incf ,i))
        (end-for)
        (update ,var (aref ,vector ,i))))
 
-(define-simple-binding over (var iterable &rest iterator-args &aux (iterator (apply #'make-iterator iterable iterator-args)))
+(define-value-binding over (var iterable &rest iterator-args &aux (iterator (apply #'make-iterator iterable iterator-args)))
   `(if (has-more ,iterator)
        (update ,var (next ,iterator))
        (end-for)))
@@ -51,21 +51,21 @@
   (with-hash-table-iterator (it table)
     (lambda () (it))))
 
-(define-simple-binding table-keys (var table &aux (iterator (hash-table-iterator table)) next key val)
+(define-value-binding table-keys (var table &aux (iterator (hash-table-iterator table)) next key val)
   `(multiple-value-bind (,next ,key ,val) (funcall ,iterator)
      (declare (ignore ,val))
      (if ,next
          (update ,var ,key)
          (end-for))))
 
-(define-simple-binding table-values (var table &aux (iterator (hash-table-iterator table)) next key val)
+(define-value-binding table-values (var table &aux (iterator (hash-table-iterator table)) next key val)
   `(multiple-value-bind (,next ,key ,val) (funcall ,iterator)
      (declare (ignore ,key))
      (if ,next
          (update ,var ,val)
          (end-for))))
 
-(define-simple-binding table-pairs (var table &aux (iterator (hash-table-iterator table)) next key val)
+(define-value-binding table-pairs (var table &aux (iterator (hash-table-iterator table)) next key val)
   `(multiple-value-bind (,next ,key ,val) (funcall ,iterator)
      (cond (,next
             (update ,(first var) ,key)
@@ -88,13 +88,13 @@
           (emit-it :inherited)
           (error "At least one of :INTERNAL :EXTERNAL :INHERITED required for package iteration.")))))
 
-(define-simple-binding symbols (var package &rest status &aux (iterator (package-iterator package (or status '(:internal :external :inherited)))) next symbol)
+(define-value-binding symbols (var package &rest status &aux (iterator (package-iterator package (or status '(:internal :external :inherited)))) next symbol)
   `(multiple-value-bind (,next ,symbol) (funcall ,iterator)
      (if ,next
          (setf ,var ,symbol)
          (end-for))))
 
-(define-simple-binding between ((var (if ascending (- from step) (+ from step))) from to &key (by 1) &aux (ascending (< from to)))
+(define-value-binding between ((var (if ascending (- from step) (+ from step))) from to &key (by 1) &aux (ascending (< from to)))
   (declare (ignore from))
   `(cond (,ascending
           (when (<= ,to ,var)
@@ -105,14 +105,14 @@
             (end-for))
           (decf ,var ,by))))
 
-(define-simple-binding from ((var (- from step)) from &key (by 1))
+(define-value-binding from ((var (- from step)) from &key (by 1))
   `(incf ,var ,by))
 
-(define-simple-binding repeating ((var 0) limit)
+(define-value-binding repeating ((var 0) limit)
   `(when (< ,limit (incf ,var))
      (end-for)))
 
-(define-binding collecting (var form &aux (head (cons NIL NIL)) (tail head))
+(define-form-binding collecting (var form &aux (head (cons NIL NIL)) (tail head))
   `(setf ,tail (setf (cdr ,tail) (cons ,form NIL))
          ,var (cdr ,head)))
 
@@ -122,7 +122,7 @@
     (dolist (el list (values (cdr head) tail))
       (setf tail (setf (cdr tail) (cons el NIL))))))
 
-(define-binding appending (var form &aux (head (cons NIL NIL)) (tail head))
+(define-form-binding appending (var form &aux (head (cons NIL NIL)) (tail head))
   (let ((result (gensym "RESULT"))
         (new-tail (gensym "NEW-TAIL")))
     `(let ((,result ,form))
@@ -132,7 +132,7 @@
                  ,tail ,new-tail))
          (setf ,var (cdr ,head))))))
 
-(define-binding nconcing (var form &aux (head (cons NIL NIL)) (tail head))
+(define-form-binding nconcing (var form &aux (head (cons NIL NIL)) (tail head))
   (let ((result (gensym "RESULT")))
     `(let ((,result ,form))
        (when ,result
@@ -140,19 +140,19 @@
                ,tail (last ,result))
          (setf ,var (cdr ,head))))))
 
-(define-binding counting ((var 0) form)
+(define-form-binding counting ((var 0) form)
   `(when ,form (incf ,var)))
 
-(define-binding summing ((var 0) form)
+(define-form-binding summing ((var 0) form)
   `(incf ,var ,form))
 
-(define-binding maximizing (var form)
+(define-form-binding maximizing (var form)
   (let ((result (gensym "RESULT")))
     `(let ((,result ,form))
        (when (or (not ,var) (< ,var ,result))
          (setf ,var ,result)))))
 
-(define-binding minimizing (var form)
+(define-form-binding minimizing (var form)
   (let ((result (gensym "RESULT")))
     `(let ((,result ,form))
        (when (or (not ,var) (< ,result ,var))
