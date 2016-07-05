@@ -28,12 +28,25 @@
                   for gen in gens
                   collect `(setf ,var ,gen)))))))
 
-(define-value-binding in (var list &key by)
+(define-value-binding with (var value)
+  (declare (ignorable value)))
+
+(define-value-binding in (var list &key (by NIL by-p))
   `(cond (,list
-          ,(if by
+          ,(if by-p
                `(progn (update ,var (car ,list))
                        (setf ,list (funcall ,by ,list)))
-               `(setf ,var (pop ,list))))
+               `(update ,var (pop ,list))))
+         (T
+          (end-for))))
+
+(define-value-binding on (var list &key (by NIL by-p))
+  `(cond (,list
+          ,(if by-p
+               `(progn (update ,var ,list)
+                       (setf ,list (funcall ,by ,list)))
+               `(progn (update ,var ,list)
+                       (setf ,list (cdr ,list)))))
          (T
           (end-for))))
 
@@ -111,6 +124,9 @@
 (define-value-binding repeating ((var 0) limit)
   `(when (< ,limit (incf ,var))
      (end-for)))
+
+(define-form-binding = (var form)
+  `(update ,var ,form))
 
 (define-form-binding collecting (var form &aux (head (cons NIL NIL)) (tail head))
   `(setf ,tail (setf (cdr ,tail) (cons ,form NIL))
