@@ -15,3 +15,11 @@
   (if (listp a)
       (funcall key a)
       a))
+
+(defmacro with-interleaving (&body body)
+  (let ((sentinel (cons NIL NIL)))
+    (loop for next = sentinel then copy
+          for form in body
+          for copy = (copy-list form)
+          do (setf (cdr (last next)) (cons copy NIL)))
+    (cadr sentinel)))

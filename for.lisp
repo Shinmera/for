@@ -22,14 +22,6 @@
      (macrolet ((return-for (&rest values) `(return ,@values)))
        ,@body)))
 
-(defmacro with-interleaving (&body body)
-  (let ((sentinel (cons NIL NIL)))
-    (loop for next = sentinel then copy
-          for form in body
-          for copy = (copy-list form)
-          do (setf (cdr (last next)) (cons copy NIL)))
-    (cadr sentinel)))
-
 (defmacro for (bindings &body body)
   (multiple-value-bind (surrounding forms) (convert-bindings bindings)
     `(with-interleaving
