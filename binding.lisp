@@ -93,6 +93,31 @@
                        ,@(bindings-for-gens vars vars-gen-gens))
                    ,@body))))))
 
+(defmacro define-value-symbol-macro-binding (name (var &rest args) &body body)
+  (let* ((var (enlist var))
+         (vars (lambda-fiddle:extract-lambda-vars (lambda-fiddle:remove-aux-part args)))
+         (vars-gens (loop for var in vars collect `(gensym ,(string (delist var)))))
+         (vars-gen-gens (loop for var in vars collect (gensym (string (delist var)))))
+         (aux (lambda-fiddle:collect-for-keyword '&aux args))
+         (aux-gens (loop for var in aux collect `(gensym ,(string (delist var)))))
+         (aux-gen-gens (loop for var in aux collect (gensym (string (delist var)))))
+         (all (append vars aux))
+         (all-gen-gens (append vars-gen-gens aux-gen-gens)))
+    `(define-direct-binding ,name (,(first var)
+                                   ,@(lambda-fiddle:remove-aux-part args))
+       (let (,@(mapcar #'list aux-gen-gens aux-gens)
+             ,@(mapcar #'list vars-gen-gens vars-gens))
+         (values `(with-interleaving
+                    (let* ,(list
+                            ,@(loop for var in vars for gen in vars-gen-gens
+                                    collect `(list ,gen ,var))
+                            ,@(loop for var in aux for gen in aux-gen-gens
+                                    collect `(list ,gen ,(translate-form-vars (delist var #'second) all all-gen-gens)))))
+                    (symbol-macrolet (,(list ,(first var) ,(translate-form-vars (second var) all all-gen-gens)))))
+                 (let (,@(bindings-for-gens aux aux-gen-gens)
+                       ,@(bindings-for-gens vars vars-gen-gens))
+                   ,@body))))))
+
 (defun convert-bindings (bindings)
   (loop for (var type . args) in bindings
         for (surrounding forms) = (multiple-value-list
