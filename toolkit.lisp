@@ -23,3 +23,31 @@
           for copy = (copy-list form)
           do (setf (cdr (last next)) (cons copy NIL)))
     (cadr sentinel)))
+
+(defun copy-list* (list)
+  (let* ((head (cons NIL NIL))
+         (tail head))
+    (dolist (el list (values (cdr head) tail))
+      (setf tail (setf (cdr tail) (cons el NIL))))))
+
+(defun replace-lambda-vars (lambda-list vars new-vars)
+  (flet ((replacement (var)
+           (if (find var vars)
+               (elt new-vars (position var vars))
+               var)))
+    (loop for item in lambda-list
+          collect (cond ((listp item)
+                         (mapcar #'replacement item))
+                        (T (replacement item))))))
+
+(defmacro update (place value-form)
+  (etypecase place
+    (symbol `(setf ,place ,value-form))
+    (list
+     (let* ((vars (lambda-fiddle:extract-all-lambda-vars place))
+            (gens (loop for var in vars collect (gensym (string var))))
+            (replaced (replace-lambda-vars place vars gens)))
+       `(destructuring-bind ,replaced ,value-form
+          ,@(loop for var in vars
+                  for gen in gens
+                  collect `(setf ,var ,gen)))))))

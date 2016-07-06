@@ -6,28 +6,6 @@
 
 (in-package #:org.shirakumo.for)
 
-(defun replace-lambda-vars (lambda-list vars new-vars)
-  (flet ((replacement (var)
-           (if (find var vars)
-               (elt new-vars (position var vars))
-               var)))
-    (loop for item in lambda-list
-          collect (cond ((listp item)
-                         (mapcar #'replacement item))
-                        (T (replacement item))))))
-
-(defmacro update (place value-form)
-  (etypecase place
-    (symbol `(setf ,place ,value-form))
-    (list
-     (let* ((vars (lambda-fiddle:extract-all-lambda-vars place))
-            (gens (loop for var in vars collect (gensym (string var))))
-            (replaced (replace-lambda-vars place vars gens)))
-       `(destructuring-bind ,replaced ,value-form
-          ,@(loop for var in vars
-                  for gen in gens
-                  collect `(setf ,var ,gen)))))))
-
 (define-value-binding with (var value)
   (declare (ignorable value)))
 
@@ -131,12 +109,6 @@
 (define-form-binding collecting (var form &aux (head (cons NIL NIL)) (tail head))
   `(setf ,tail (setf (cdr ,tail) (cons ,form NIL))
          ,var (cdr ,head)))
-
-(defun copy-list* (list)
-  (let ((head (cons NIL NIL))
-        (tail head))
-    (dolist (el list (values (cdr head) tail))
-      (setf tail (setf (cdr tail) (cons el NIL))))))
 
 (define-form-binding appending (var form &aux (head (cons NIL NIL)) (tail head))
   (let ((result (gensym "RESULT"))
