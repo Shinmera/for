@@ -107,7 +107,7 @@
          (setf ,var ,symbol)
          (end-for))))
 
-(define-value-binding between ((var (if ascending (- from step) (+ from step))) from to &key (by 1) &aux (ascending (< from to)))
+(define-value-binding between ((var (if ascending (- from by) (+ from by))) from to &key (by 1) &aux (ascending (< from to)))
   (declare (ignore from))
   `(cond (,ascending
           (when (<= ,to ,var)
@@ -118,7 +118,7 @@
             (end-for))
           (decf ,var ,by))))
 
-(define-value-binding from ((var (- from step)) from &key (by 1))
+(define-value-binding from ((var (- from by)) from &key (by 1))
   `(incf ,var ,by))
 
 (define-value-binding repeating ((var 0) limit)
