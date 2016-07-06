@@ -128,6 +128,14 @@
                ,tail (last ,result))
          (setf ,var (cdr ,head))))))
 
+(defvar *unbound* (gensym "UNBOUND"))
+
+(define-form-binding reducing ((var *unbound*) form &key by)
+  `(cond ((eq ,var *unbound*)
+          (setf ,var ,form))
+         (T
+          (setf ,var (funcall ,by ,var ,form)))))
+
 (define-form-binding counting ((var 0) form)
   `(when ,form (incf ,var)))
 
