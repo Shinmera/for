@@ -33,23 +33,9 @@
    #:hash-table-iterator
    #:prefetch))
 
-(defpackage #:for
-  (:nicknames #:org.shirakumo.for)
-  (:use #:cl #:org.shirakumo.for.iterator)
-  ;; binding.lisp
-  (:export
-   #:binding
-   #:remove-binding
-   #:define-direct-binding
-   #:define-form-binding
-   #:define-form-symbol-macro-binding
-   #:define-value-binding
-   #:define-value-symbol-macro-binding)
-  ;; clause.lisp
-  (:export
-   #:clause
-   #:remove-clause
-   #:define-clause)
+(defpackage #:for-minimal
+  (:nicknames #:org.shirakumo.for.minimal)
+  (:use #:cl)
   ;; for.lisp
   (:export
    #:for)
@@ -80,6 +66,27 @@
    #:never
    #:thereis
    #:while
-   #:until)
+   #:until))
+
+(defpackage #:for
+  (:nicknames #:org.shirakumo.for)
+  (:use #:cl #:org.shirakumo.for.iterator #:org.shirakumo.for.minimal)
+  ;; binding.lisp
+  (:export
+   #:binding
+   #:remove-binding
+   #:define-direct-binding
+   #:define-form-binding
+   #:define-form-symbol-macro-binding
+   #:define-value-binding
+   #:define-value-symbol-macro-binding)
+  ;; clause.lisp
+  (:export
+   #:clause
+   #:remove-clause
+   #:define-clause)
   ;; toolkit.lisp
   (:export))
+
+(do-external-symbols (symb '#:for-minimal)
+  (export symb '#:for))
