@@ -51,3 +51,22 @@
           ,@(loop for var in vars
                   for gen in gens
                   collect `(setf ,var ,gen)))))))
+
+(defun hash-table-iterator (table)
+  (with-hash-table-iterator (it table)
+    (lambda () (it))))
+
+(defun package-iterator (package statuses)
+  (let ((statuses (enlist statuses)))
+    (macrolet ((emit-it (&rest statuses)
+                 `(when (and ,@(loop for status in statuses collect `(find ,status statuses)))
+                    (with-package-iterator (it package ,@statuses)
+                      (lambda () (it))))))
+      (or (emit-it :internal :external :inherited)
+          (emit-it :internal :external)
+          (emit-it :internal :inherited)
+          (emit-it :external :inherited)
+          (emit-it :internal)
+          (emit-it :external)
+          (emit-it :inherited)
+          (error "At least one of :INTERNAL :EXTERNAL :INHERITED required for package iteration.")))))

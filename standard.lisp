@@ -38,10 +38,6 @@
        (next ,iterator)
        (end-for)))
 
-(defun hash-table-iterator (table)
-  (with-hash-table-iterator (it table)
-    (lambda () (it))))
-
 (define-value-binding table-keys (var table &aux (iterator (hash-table-iterator table)) next key val)
   `(multiple-value-bind (,next ,key ,val) (funcall ,iterator)
      (declare (ignore ,val))
@@ -63,21 +59,6 @@
             (update ,(second var) ,val))
            (T
             (end-for)))))
-
-(defun package-iterator (package statuses)
-  (let ((statuses (enlist statuses)))
-    (macrolet ((emit-it (&rest statuses)
-                 `(when (and ,@(loop for status in statuses collect `(find ,status statuses)))
-                    (with-package-iterator (it package ,@statuses)
-                      (lambda () (it))))))
-      (or (emit-it :internal :external :inherited)
-          (emit-it :internal :external)
-          (emit-it :internal :inherited)
-          (emit-it :external :inherited)
-          (emit-it :internal)
-          (emit-it :external)
-          (emit-it :inherited)
-          (error "At least one of :INTERNAL :EXTERNAL :INHERITED required for package iteration.")))))
 
 (define-value-binding symbols (var package &rest status &aux (iterator (package-iterator package (or status '(:internal :external :inherited)))) next symbol)
   `(multiple-value-bind (,next ,symbol) (funcall ,iterator)
