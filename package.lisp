@@ -5,7 +5,81 @@
 |#
 
 (in-package #:cl-user)
+(defpackage #:for-iterator
+  (:nicknames #:org.shirakumo.for.iterator)
+  (:use #:cl)
+  ;; iterator.lisp
+  (:export
+   #:has-more
+   #:next
+   #:current
+   #:make-iterator
+   #:iterator
+   #:object
+   #:list-iterator
+   #:vector-iterator
+   #:start
+   #:array-iterator
+   #:total-length
+   #:stream-iterator
+   #:buffer
+   #:index
+   #:limit
+   #:directory-iterator
+   #:random-iterator
+   #:limit
+   #:package-iterator
+   #:prefetch
+   #:hash-table-iterator
+   #:prefetch))
+
 (defpackage #:for
   (:nicknames #:org.shirakumo.for)
-  (:use #:cl)
+  (:use #:cl #:org.shirakumo.for.iterator)
+  ;; binding.lisp
+  (:export
+   #:binding
+   #:remove-binding
+   #:define-direct-binding
+   #:define-form-binding
+   #:define-form-symbol-macro-binding
+   #:define-value-binding
+   #:define-value-symbol-macro-binding)
+  ;; clause.lisp
+  (:export
+   #:clause
+   #:remove-clause
+   #:define-clause)
+  ;; for.lisp
+  (:export
+   #:for)
+  ;; standard.lisp
+  (:export
+   #:with
+   #:in
+   #:on
+   #:across
+   #:over
+   #:table-keys
+   #:table-values
+   #:table-pairs
+   #:symbols
+   #:between
+   #:from
+   #:repeating
+   #:=
+   #:collecting
+   #:appending
+   #:nconcing
+   #:reducing
+   #:counting
+   #:summing
+   #:maximizing
+   #:minimizing
+   #:always
+   #:never
+   #:thereis
+   #:while
+   #:until)
+  ;; toolkit.lisp
   (:export))

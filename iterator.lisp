@@ -4,7 +4,7 @@
  Author: Nicolas Hafner <shinmera@tymoon.eu>
 |#
 
-(in-package #:org.shirakumo.for)
+(in-package #:org.shirakumo.for.iterator)
 
 (defgeneric has-more (iterator))
 (defgeneric next (iterator))
@@ -137,7 +137,7 @@
    :status '(:internal :external :inherited)))
 
 (defmethod initialize-instance :after ((iterator package-iterator) &key object status)
-  (setf (object iterator) (package-iterator object status)))
+  (setf (object iterator) (org.shirakumo.for::package-iterator object status)))
 
 (defmethod has-more ((iterator package-iterator))
   (cond ((prefetch iterator)
@@ -162,7 +162,7 @@
   ((prefetch :initform NIL :accessor prefetch)))
 
 (defmethod initialize-instance :after ((iterator hash-table-iterator) &key object)
-  (setf (object iterator) (hash-table-iterator object)))
+  (setf (object iterator) (org.shirakumo.for::hash-table-iterator object)))
 
 (defmethod has-more ((iterator hash-table-iterator))
   (cond ((prefetch iterator)
