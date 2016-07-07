@@ -17,7 +17,7 @@
    (current :accessor current)))
 
 (defmethod next :around ((iterator iterator))
-  (setf (current iterator) (call-next-method)))
+  (setf (slot-value iterator 'current) (call-next-method)))
 
 (defclass list-iterator (iterator)
   ())
