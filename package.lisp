@@ -66,7 +66,16 @@
    #:never
    #:thereis
    #:while
-   #:until))
+   #:until
+   #:repeat
+   #:collect
+   #:append
+   #:nconc
+   #:reduce
+   #:count
+   #:sum
+   #:maximize
+   #:minimize))
 
 (defpackage #:for
   (:nicknames #:org.shirakumo.for)
@@ -75,6 +84,7 @@
   (:export
    #:binding
    #:remove-binding
+   #:define-alias-binding
    #:define-direct-binding
    #:define-form-binding
    #:define-form-symbol-macro-binding

@@ -9,7 +9,8 @@
 (defvar *bindings* (make-hash-table :test 'eql))
 
 (defun binding (name)
-  (or (gethash name *bindings*)
+  (or (let ((result (gethash name *bindings*)))
+        (if (symbolp result) (binding result) result))
       (error "A FOR binding with the name ~s is not known." name)))
 
 (defun (setf binding) (func name)
@@ -18,6 +19,10 @@
 (defun remove-binding (name)
   (binding name)
   (remhash name *bindings*))
+
+(defmacro define-alias-binding (name referenced-binding-name)
+  `(progn (setf (binding ',name) ',referenced-binding-name)
+          ',name))
 
 (defmacro define-direct-binding (name args &body body)
   `(progn (setf (binding ',name)

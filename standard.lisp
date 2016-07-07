@@ -149,3 +149,16 @@
 
 (define-clause until (form)
   `(when ,form (end-for)))
+
+;; Aliases
+(define-alias-binding repeat repeating)
+(define-alias-binding collect collecting)
+(define-alias-binding append appending)
+(define-alias-binding nconc nconcing)
+(define-alias-binding reduce reducing)
+(define-alias-binding count counting)
+(define-alias-binding sum summing)
+(define-alias-binding maximize maximizing)
+(define-alias-binding minimize minimizing)
+
+;; FIXME: Figure out how to control the return value of the loop.
