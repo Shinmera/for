@@ -50,11 +50,6 @@
   (loop for var in aux for gen in gens
         collect (list (delist var) gen)))
 
-(defun quote-inits (aux)
-  (loop for var in aux
-        for (symb init) = (enlist var)
-        collect (list symb (list 'quote init))))
-
 (defun compute-binding-parts (var vars args)
   (let* ((var (enlist var))
          (vargen (gensym "VAR"))
