@@ -9,7 +9,9 @@
 (defvar *clauses* (make-hash-table :test 'eql))
 
 (defun clause (name)
-  (gethash name *clauses*))
+  (let ((result (or (gethash name *clauses*)
+                    (gethash (find-symbol (string name) #.*package*) *clauses*))))
+    (if (and result (symbolp result)) (binding result) result)))
 
 (defun (setf clause) (func name)
   (setf (gethash name *clauses*) func))

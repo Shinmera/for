@@ -11,6 +11,9 @@
   (function binding
     "Accessor to the function that compiles the given binding.
 
+If there is no binding named by the given symbol directly, another search is
+performed using the symbol with the same symbol-name from the FOR package.
+
 See REMOVE-BINDING")
 
   (function remove-binding
@@ -151,6 +154,9 @@ See BINDING"))
 (docs:define-docs
   (function clause
     "Accessor to the function that compiles the given clause.
+
+If there is no clause named by the given symbol directly, another search is
+performed using the symbol with the same symbol-name from the FOR package.
 
 See REMOVE-CLAUSE")
 

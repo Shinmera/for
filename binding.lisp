@@ -9,9 +9,9 @@
 (defvar *bindings* (make-hash-table :test 'eql))
 
 (defun binding (name)
-  (or (let ((result (gethash name *bindings*)))
-        (if (and result (symbolp result)) (binding result) result))
-      ))
+  (let ((result (or (gethash name *bindings*)
+                    (gethash (find-symbol (string name) #.*package*) *bindings*))))
+    (if (and result (symbolp result)) (binding result) result)))
 
 (defun (setf binding) (func name)
   (setf (gethash name *bindings*) func))
