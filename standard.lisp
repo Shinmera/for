@@ -6,7 +6,7 @@
 
 (in-package #:org.shirakumo.for)
 
-(define-value-binding with (var value)
+(define-value-binding as ((var value) value)
   (declare (ignorable value)))
 
 (define-value-binding in (var list &key (by NIL by-p))

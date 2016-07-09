@@ -44,7 +44,7 @@
    #:for)
   ;; standard.lisp
   (:export
-   #:with
+   #:as
    #:in
    #:on
    #:across
