@@ -102,7 +102,9 @@
    #:remove-clause
    #:define-clause)
   ;; toolkit.lisp
-  (:export))
+  (:export
+   #:with-interleaving
+   #:update))
 
 (do-external-symbols (symb '#:for-minimal)
   (export symb '#:for))
