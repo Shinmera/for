@@ -72,7 +72,7 @@
                     (loop for var in aux for gen in aux-gen-gens
                           collect `(list ,gen ,(translate-form-vars (delist var #'second) all all-gen-gens))))
             `(loop for ,vargen in (lambda-fiddle:extract-lambda-vars (enlist ,(first var)))
-                   collect (list ,vargen ,(translate-form-vars (second var) aux aux-gen-gens))))))
+                   collect (list ,vargen ,(translate-form-vars (second var) all all-gen-gens))))))
 
 (defmacro define-form-binding (name (var &rest args) &body body)
   (multiple-value-bind (args outer-let inner-let result-let varform) (compute-binding-parts var NIL args)
