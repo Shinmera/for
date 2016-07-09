@@ -32,7 +32,7 @@ Binding functions can return three values:
 1. A single \"surrounding form\" that will go around the resulting loop. If you
    require multiple surrounding forms, you can use WITH-INTERLEAVING.
 2. A form to run during each iteration. They will be run before any body forms.
-3. A form to run during the loop end.
+3. A form whose value is returned by the FOR.
 
 The arguments that the function receives are directly translated from the
 respective binding expression. One argument will always be passed in the
@@ -144,7 +144,7 @@ If an unknown binding is referenced, an error is signalled.
 Returns three values:
 1. A list of all surrounding forms
 2. A list of all body forms
-3. A list of all exit forms
+3. A list of all value forms
 
 See BINDING"))
 
@@ -169,7 +169,7 @@ Clause functions can return three values:
 1. A single \"surrounding form\" that will go around the resulting loop. If you
    require multiple surrounding forms, you can use WITH-INTERLEAVING.
 2. A form to run during each iteration.
-3. A form to run during the loop end.
+3. A form whose value is returned by the FOR.
 
 The arguments that the function receives are directly translated from the
 respective clause expression.
@@ -205,7 +205,7 @@ is replaced by the form computed by the clause function.
 Returns three values:
 1. A list of all surrounding forms
 2. A list of all body forms
-3. A list of all exit forms
+3. A list of all value forms
 
 See CLAUSE"))
 
@@ -253,10 +253,19 @@ Each binding should have the form (variable/destructuring-list binding-type args
 Within the body, special iteration clauses may be present. A clause must appear
 at the \"top-level\" of the body and cannot appear as a macro-expansion.
 
-The return value is determined by one or more of the bindings or clauses. The
-iteration may also be ended prematurely by either a direct RETURN-FOR, bypassing
-end-of-loop forms, or by a simple END-FOR.
+If the loop is terminated normally by END-FOR then multiple values may be returned
+depending on how many bindings or clauses are present that want to return values.
+The order of the values is as follows: the clause values are returned in the
+order that the clauses appear in the body, followed by the binding values in the
+order of the binding expressions.
 
+The loop may also be terminated abnormally by a direct call to RETURN-FOR or RETURN.
+
+See BINDING
+See CLAUSE
+See END-FOR
+See SKIP-FOR
+See RETURN-FOR
 See WITH-FOR-TAGBODY
 See WITH-FOR-BLOCK
 See CONVERT-BINDINGS

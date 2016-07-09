@@ -33,5 +33,6 @@
            (with-for-tagbody
                (progn ,@bind-forms
                       ,@body-forms)
-             ,@bind-exit
-             ,@clause-exit))))))
+             (return-for
+              ,@clause-exit
+              ,@bind-exit)))))))

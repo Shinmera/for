@@ -86,7 +86,7 @@
   `(define-form-binding ,name (,var ,@args)
      (values
       (progn ,@body)
-      `(return-for ,(delist var)))))
+      (delist var))))
 
 (defmacro define-form-symbol-macro-binding (name (var &rest args) &body body)
   (multiple-value-bind (args outer-let inner-let result-let varform) (compute-binding-parts var NIL args)
