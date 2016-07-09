@@ -38,6 +38,9 @@
   (:use #:cl)
   ;; for.lisp
   (:export
+   #:end-for
+   #:skip-for
+   #:return-for
    #:for)
   ;; standard.lisp
   (:export

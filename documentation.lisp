@@ -208,15 +208,36 @@ See CLAUSE"))
   (function with-for-tagbody
     "Wraps the body in a looping tagbody, running the EXIT forms when the loop ends.
 
-Two local macros are bound, END-FOR and SKIP-FOR. END-FOR ends the loop and 
-SKIP-FOR immediately restarts the loop, skipping the rest of the body.")
+See END-FOR
+See SKIP-FOR")
+
+  (function end-for
+    "Ends the for loop and jumps to the epilogue.
+
+This is a local macro in WITH-FOR-TAGBODY.
+
+See WITH-FOR-TAGBODY")
+
+  (function skip-for
+    "Skips the current iteration and jumps to the next one.
+
+This is a local macro in WITH-FOR-TAGBODY.
+
+See WITH-FOR-TAGBODY")
 
   (function with-for-block
     "Wraps the body in a looping block.
 
 This establishes a NIL block.
-One local macro is bound, RETURN-FOR, which simply
-translates to a RETURN with the values passed.")
+
+See RETURN-FOR")
+
+  (function return-for
+    "Immediately returns the VALUES from the for block.
+
+This is a local macro in WITH-FOR-BLOCK.
+
+See WITH-FOR-BLOCK")
 
   (function for
     "Loops the body with the given bindings established.
