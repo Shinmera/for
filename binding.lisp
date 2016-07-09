@@ -66,7 +66,9 @@
             (append (bindings-for-gens aux aux-gen-gens)
                     (bindings-for-gens vars vars-gen-gens))
             (append (loop for var in vars for gen in vars-gen-gens
-                          collect `(list ,gen ,var))
+                          collect `(list ,gen ,(if (eql var (lambda-fiddle:rest-lambda-var args))
+                                                   `(list* 'list ,var)
+                                                   var)))
                     (loop for var in aux for gen in aux-gen-gens
                           collect `(list ,gen ,(translate-form-vars (delist var #'second) all all-gen-gens))))
             `(loop for ,vargen in (lambda-fiddle:extract-lambda-vars (enlist ,(first var)))
