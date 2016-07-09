@@ -150,8 +150,10 @@
           result))
 
 (define-simple-clause thereis (form &aux (result NIL))
-  (values `(when ,form (setf ,result T) (end-for))
-          result))
+  (let ((res (gensym "RES")))
+    (values `(let ((,res ,form))
+               (when ,res (setf ,result ,res) (end-for)))
+            result)))
 
 (define-simple-clause while (form)
   `(unless ,form (end-for)))
