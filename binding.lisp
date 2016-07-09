@@ -11,7 +11,7 @@
 (defun binding (name)
   (or (let ((result (gethash name *bindings*)))
         (if (and result (symbolp result)) (binding result) result))
-      (error "A FOR binding with the name ~s is not known." name)))
+      ))
 
 (defun (setf binding) (func name)
   (setf (gethash name *bindings*) func))
@@ -141,4 +141,6 @@
    bindings
    (lambda (binding)
      (destructuring-bind (var type &rest args) binding
-       (multiple-value-list (apply (binding type) var args))))))
+       (let ((binding (or (binding type)
+                          (error "A FOR binding with the name ~s is not known." type))))
+         (multiple-value-list (apply binding var args)))))))

@@ -10,7 +10,6 @@
 (docs:define-docs
   (function binding
     "Accessor to the function that compiles the given binding.
-If no such binding exists, an error is signalled.
 
 See REMOVE-BINDING")
 
@@ -152,7 +151,6 @@ See BINDING"))
 (docs:define-docs
   (function clause
     "Accessor to the function that compiles the given clause.
-If no such clause exists, an error is signalled.
 
 See REMOVE-CLAUSE")
 
@@ -424,10 +422,10 @@ See ITERATOR"))
 
 ;; standard.lisp
 (docs:define-documentation-test binding (symb)
-  (ignore-errors (binding symb)))
+  (binding symb))
 
 (docs:define-documentation-test clause (symb)
-  (ignore-errors (clause symb)))
+  (clause symb))
 
 (docs:define-docs
   (binding as

@@ -9,8 +9,7 @@
 (defvar *clauses* (make-hash-table :test 'eql))
 
 (defun clause (name)
-  (or (gethash name *clauses*)
-      (error "A FOR clause with the name ~s is not known." name)))
+  (gethash name *clauses*))
 
 (defun (setf clause) (func name)
   (setf (gethash name *clauses*) func))
@@ -50,7 +49,7 @@
   (collect-for-values
    forms
    (lambda (form)
-     (let ((clause (when (consp form) (ignore-errors (clause (first form))))))
+     (let ((clause (when (consp form) (clause (first form)))))
        (if clause
            (multiple-value-list (apply clause (rest form)))
            (list NIL form))))))
