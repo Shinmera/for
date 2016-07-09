@@ -21,13 +21,15 @@
   (remhash name *bindings*))
 
 (defmethod documentation ((name symbol) (type (eql 'binding)))
-  (documentation (binding name) type))
+  (when name
+    (documentation (binding name) type)))
 
 (defmethod documentation ((func function) (type (eql 'binding)))
   (documentation func T))
 
 (defmethod (setf documentation) (docstring (name symbol) (type (eql 'binding)))
-  (setf (documentation (binding name) type) docstring))
+  (when name
+    (setf (documentation (binding name) type) docstring)))
 
 (defmethod (setf documentation) (docstring (func function) (type (eql 'binding)))
   (setf (documentation func T) docstring))
