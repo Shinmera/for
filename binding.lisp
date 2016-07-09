@@ -10,7 +10,7 @@
 
 (defun binding (name)
   (or (let ((result (gethash name *bindings*)))
-        (if (symbolp result) (binding result) result))
+        (if (and result (symbolp result)) (binding result) result))
       (error "A FOR binding with the name ~s is not known." name)))
 
 (defun (setf binding) (func name)
