@@ -116,7 +116,8 @@
 
 (defvar *unbound* (gensym "UNBOUND"))
 
-(define-accumulation-binding reducing ((var *unbound*) form &key by)
+(define-accumulation-binding reducing ((var *unbound*) form &key (by NIL by-p))
+  (unless by-p (error ":BY argument required for REDUCING binding."))
   `(cond ((eq ,var *unbound*)
           (setf ,var ,form))
          (T
