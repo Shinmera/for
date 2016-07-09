@@ -423,8 +423,167 @@ See PREFETCH
 See ITERATOR"))
 
 ;; standard.lisp
+(docs:define-documentation-test binding (symb)
+  (ignore-errors (binding symb)))
+
+(docs:define-documentation-test clause (symb)
+  (ignore-errors (clause symb)))
+
 (docs:define-docs
-  )
+  (binding as
+    "Simply binds the value of the form to the var.
+
+This is the same as if you were to use LET around the FOR directly.")
+  
+  (binding in
+    "Iterates over a list, binding the current list element to the var every time.
+
+Supports UPDATE.
+
+Accepts a BY keyword argument, which determines how the list is stepped.")
+  
+  (binding on
+    "Iterates over a list, binding the current list cons to the var every time.
+
+Supports UPDATE.
+
+Accepts a BY keyword argument, which determines how the list is stepped.")
+  
+  (binding across
+    "Iterates over a vector, binding the current item to the var every time.
+
+Supports UPDATE.")
+  
+  (binding over
+    "Iterates over a generic sequence using an ITERATOR, binding the current item to the var every step.
+
+Supports UPDATE.
+
+Potentially accepts arbitrary arguments, depending on which iterator is selected
+for the respective object.
+
+See FOR-ITERATOR:MAKE-ITERATOR")
+
+  (binding updating
+    "Iterates over a generic sequence using an ITERATOR, with var being symbol macro to the current item.
+
+You may SETF the var to update the item in the sequence, if the underlying iterator
+supports doing so.
+
+Potentially accepts arbitrary arguments, depending on which iterator is selected
+for the respective object.
+
+See FOR-ITERATOR:MAKE-ITERATOR")
+  
+  (binding table-keys
+    "Iterates over a hash table, binding the current key to the var every time.
+
+Supports UPDATE.")
+  
+  (binding table-values
+    "Iterates over a hash table, binding the current value to the var every time.
+
+Supports UPDATE.")
+  
+  (binding table-pairs
+    "Iterates over a hash table, binding a list of the current key and value to the var every time.
+
+Supports UPDATE.")
+  
+  (binding symbols
+    "Iterates over the symbols of a package, binding the current symbol to the var every time.
+
+Accepts an optional list of arguments that qualify the type of symbols to iterate over.
+Each type must be one of :INTERNAL :EXTERNAL :INHERITED. If no arguments are given, it
+defaults to (:INTERNAL :EXTERNAL :INHERITED).")
+  
+  (binding between
+    "Iterates the var over the given range.
+
+Ranges can be either decreasing or increasing. The starting value is inclusive, whereas
+the ending value is exclusive. This means that (a between 0 2) iterates over 0 and 1.
+
+An optional BY keyword argument is accepted, which determines the step.")
+  
+  (binding from
+    "Increases the var by a step every time.
+
+An optional BY keyword argument is accepted, which determines the step.")
+  
+  (binding repeating
+    "Increases the var the given amount of times starting with 1.
+
+This is the same as (a between 1 n)")
+  
+  (binding =
+    "Updates the var by the value of the given form every time.
+
+Supports UPDATE.")
+  
+  (binding collecting
+    "Collects the results of FORM into a list where the VAR points to the head of the list.
+
+This returns the var on END-FOR.")
+  
+  (binding appending
+    "Appends the results of FORM into a list where the VAR points to the head of the list.
+
+This returns the var on END-FOR.")
+  
+  (binding nconcing
+    "Appends the results of FORM destructively into a list where the VAR points to the head of the list.
+
+This returns the var on END-FOR.")
+  
+  (binding reducing
+    "Combines the results of FORM by a combination function BY into var.
+
+On the first iteration the var is simply set to the result of the FORM. On every
+successive step, the var is set to the result of calling BY with the var as the
+first argument and the result of the FORM as the second argument.
+
+This returns the var on END-FOR.")
+  
+  (binding counting
+    "Increases the var by one if the FORM returns non-NIL.
+
+This returns the var on END-FOR.")
+  
+  (binding summing
+    "Sums up the value of the FORM into the var.
+
+This returns the var on END-FOR.")
+  
+  (binding maximizing
+    "Sets the var to the maximum of the values returned by FORM so far each step.
+
+This returns the var on END-FOR.")
+  
+  (binding minimizing
+    "Sets the var to the minimum of the values returned by FORM so far each step.
+
+This returns the var on END-FOR.")
+  
+  (clause always
+    "If FORM always returns non-NIL, then T is returned.
+As soon as FORM returns NIL the for is aborted with END-FOR and NIL is returned.")
+  
+  (clause never
+    "If FORM never returns non-NIL, then T is returned.
+As soon as FORM returns non-NIL the for is aborted with END-FOR and NIL is returned.")
+  
+  (clause thereis
+    "If FORM never returns non-NIL, then NIL is returned.
+As soon as FORM returns non-NIL the for is aborted with END-FOR and the non-NIL value is returned.")
+  
+  (clause while
+    "When FORM returns NIL, END-FOR is called.")
+  
+  (clause until
+    "When FORM returns non-NIL, END-FOR is called.")
+  
+  (clause returning
+    "Does nothing each step, but makes sure to evaluate and return the value of FORM on END-FOR."))
 
 ;; toolkit.lisp
 (docs:define-docs
