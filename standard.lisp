@@ -153,6 +153,10 @@
 (define-simple-clause until (form)
   `(when ,form (end-for)))
 
+(define-simple-clause returning (form)
+  (values NIL
+          form))
+
 ;; Aliases
 (define-alias-binding repeat repeating)
 (define-alias-binding collect collecting)

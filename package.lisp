@@ -70,6 +70,7 @@
    #:thereis
    #:while
    #:until
+   #:returning
    #:repeat
    #:collect
    #:append
