@@ -183,9 +183,15 @@ See REMOVE-CLAUSE")
   (function define-simple-clause
     "Defines a simple clause.
 
-This is the same as DEFINE-DIRECT-CLAUSE, except that the first return value is
-always set to NIL. This means that you can use this if you simply want a clause
-that expands to some body form and maybe an exit form.
+&AUX variables in the args lambda-list receive special treatment: they are
+bound to gensyms within the definition body. Their value is only evaluated
+and set within the expanded clause. This means that AUX variables give you a
+convenient way to introduce necessary helper variables to the expanded clause.
+References to other &AUX are automatically rewritten to the appropriate gensym.
+
+The primary value returned must be the form to be evaluated on each iteration.
+A secondary value may be returned, which is a form to be evaluated when the
+loop ends normally.
 
 See DEFINE-DIRECT-CLAUSE")
 

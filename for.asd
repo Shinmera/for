@@ -15,8 +15,8 @@
   :serial T
   :components ((:file "package")
                (:file "toolkit")
-               (:file "clause")
                (:file "binding")
+               (:file "clause")
                (:file "for")
                (:file "iterator")
                (:file "standard")

@@ -26,8 +26,13 @@
           ',name))
 
 (defmacro define-simple-clause (name args &body body)
-  `(define-direct-clause ,name ,args
-     (values* NIL (progn ,@body))))
+  (multiple-value-bind (args outer-let inner-let result-let) (compute-binding-parts NIL NIL args)
+    `(define-direct-clause ,name ,(rest args)
+       (let ,outer-let
+         (values* `(let* ,(list
+                           ,@result-let))
+                  (let ,inner-let
+                    ,@body))))))
 
 (defun convert-clauses (forms)
   (collect-for-values
