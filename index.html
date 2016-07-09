@@ -1,0 +1,1627 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8"/>
+    <title>FOR</title>
+    <style type="text/css">
+      html{font-family: serif;}
+      code a{text-decoration: none;}
+      h1{display: inline-block; margin-bottom: 0;}
+      code{font-family: monospace;}
+      h4{display: inline-block; margin: 0; padding: 0;}
+      #symbol-index ul{list-style: none;}
+      .package li{margin-bottom: 20px;}
+      .package pre{margin: 0 0 0 10px; white-space: pre-wrap;}
+      .package .nicknames{font-weight: normal;}
+      table{margin: 20px;}
+      td{padding-bottom: 10px;}
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>for</h1>
+      <span class="version">1.0.0</span>
+      <p class="description">An extensible iteration macro library.</p>
+    </header>
+    <div id="content">
+      <article>
+        
+          <span><h2>About For</h2>
+
+<p>For is a library for an extensible iteration macro. It allows you to write concise looping constructs similar to <code><a href="http://l1sp.org/cl/loop">loop</a></code> and <code>iterate</code>. Unlike loop however it is extensible and sensible, and unlike iterate it does not require code-walking and is easier to extend.</p>
+
+<h2>How To</h2>
+
+<p>Load For using ASDF or Quicklisp.</p>
+
+<pre><code>(ql:quickload :for)
+</code></pre>
+
+<p>Now we can use the <code><a href="#FOR:FOR">for</a></code> macro to do iteration. Most of the constructs you know from <code><a href="http://l1sp.org/cl/loop">loop</a></code> are available with the same name in For.</p>
+
+<pre><code>(<a href="#FOR:FOR">for:for</a> ((li in (<a href="http://l1sp.org/cl/list">list</a> 1 2 3 4))
+          (vi across #(a b c d)))
+  (<a href="http://l1sp.org/cl/format">format</a> T &quot;~&amp;~a ~a&quot; li vi))
+</code></pre>
+
+<p>Unlike <code><a href="http://l1sp.org/cl/loop">loop</a></code> and <code>iterate</code>, <code><a href="#FOR:FOR">for</a></code> makes a distinction between &quot;bindings&quot; and body forms. Body forms can also contain clauses:</p>
+
+<pre><code>(<a href="#FOR:FOR">for:for</a> ((li in (<a href="http://l1sp.org/cl/list">list</a> 1 2 3 4)))
+  (<a href="#FOR:THEREIS">thereis</a> (<a href="http://l1sp.org/cl/evenp">evenp</a> li)))
+</code></pre>
+
+<p>Naturally, there's also accumulation bindings:</p>
+
+<pre><code>(<a href="#FOR:FOR">for:for</a> ((randoms collecting (<a href="http://l1sp.org/cl/random">random</a> 10)))
+  (<a href="#FOR:UNTIL">until</a> (<a href="#FOR:=">=</a> 10 (<a href="http://l1sp.org/cl/length">length</a> randoms))))
+</code></pre>
+
+<p>You might realise that the above is a rather inefficient way of writing the loop. Instead we can also use the  <code><a href="#FOR:REPEAT">repeat</a></code> binding:</p>
+
+<pre><code>(<a href="#FOR:FOR">for:for</a> ((i repeat 10)
+          (randoms collecting (<a href="http://l1sp.org/cl/random">random</a> 10))))
+</code></pre>
+
+<p>If we have multiple bindings or clauses that might have useful values to return, all of them are returned:</p>
+
+<pre><code>(<a href="#FOR:FOR">for:for</a> ((a over :random :limit 10)
+          (b collect a))
+  (<a href="#FOR:THEREIS">thereis</a> (<a href="http://l1sp.org/cl/evenp">evenp</a> a)))
+</code></pre>
+
+<p>In order for short-circuiting clauses to have highest priority on values, clause-values are always returned first followed by binding values. Otherwise the order follows the declaration order of the respective clauses/bindings.</p>
+
+<p>For also features a generic iterator construct that allows you to iterate over a multitude of different data types without having to do a case-distinction by yourself. We already saw this with the <code>over :random</code> binding from the previous example.</p>
+
+<pre><code>(<a href="#FOR:FOR">for:for</a> ((a over '(1 2 3))
+          (b over #(a b c))
+          (c over (<a href="#FOR:FOR">for:for</a> ((table as (<a href="http://l1sp.org/cl/make-hash-table">make-hash-table</a>))) 
+                    (<a href="http://l1sp.org/cl/setf">setf</a> (<a href="http://l1sp.org/cl/gethash">gethash</a> (<a href="http://l1sp.org/cl/random">random</a> 10) table) (<a href="http://l1sp.org/cl/random">random</a> 10)) (<a href="#FOR:REPEAT">repeat</a> 3)))
+          (d over *package*)
+          (e over *random-state*)
+          (f over (<a href="http://l1sp.org/cl/directory">directory</a> (<a href="http://l1sp.org/cl/merge-pathnames">merge-pathnames</a> &quot;*.*&quot; (<a href="http://l1sp.org/cl/user-homedir-pathname">user-homedir-pathname</a>))))
+          (g over (<a href="http://l1sp.org/cl/make-string-input-stream">make-string-input-stream</a> &quot;Hi!&quot;)))
+  (<a href="http://l1sp.org/cl/print">print</a> (<a href="http://l1sp.org/cl/list">list</a> a b c d e f g)))
+</code></pre>
+
+<p>Some iterators also support updating the current element. If you require doing so, you can use the <code><a href="#FOR:UPDATING">updating</a></code> binding.</p>
+
+<pre><code>(<a href="#FOR:FOR">for:for</a> ((list as (<a href="http://l1sp.org/cl/list">list</a> 1 2 3 4 5))
+          (item updating list))
+  (<a href="http://l1sp.org/cl/setf">setf</a> item (<a href="http://l1sp.org/cl/expt">expt</a> item item)))
+</code></pre>
+
+<p>Some of the bindings also support destructuring the current item by a destructuring-lambda-list.</p>
+
+<pre><code>(<a href="#FOR:FOR">for:for</a> (((type &amp;key object limit) in '((counter :limit 5)
+                                         (<a href="http://l1sp.org/cl/package">package</a> :object *package*))))
+  (<a href="http://l1sp.org/cl/format">format</a> T &quot;~&amp;Type: ~a~@[ Object: ~a~]~@[ Limit: ~a~]&quot; type object limit))
+</code></pre>
+
+<p>You can check a binding's or clause's documentation with <code>(<a href="http://l1sp.org/cl/documentation">documentation</a> 'in 'for:binding)</code> which will tell you whether it supports destructuring through <code><a href="#FOR:UPDATE">update</a></code>.</p>
+
+<p>The following bindings are included in the <code>for-minimal</code> package:</p>
+
+<ul>
+<li><code>=</code></li>
+<li><code><a href="#FOR:ACROSS">across</a></code></li>
+<li><code><a href="#FOR:APPENDING">appending</a></code> / <code><a href="#FOR:APPEND">append</a></code></li>
+<li><code><a href="#FOR:AS">as</a></code></li>
+<li><code><a href="#FOR:BETWEEN">between</a></code></li>
+<li><code><a href="#FOR:COLLECTING">collecting</a></code> / <code><a href="#FOR:COLLECT">collect</a></code></li>
+<li><code><a href="#FOR:COUNTING">counting</a></code> / <code><a href="#FOR:COUNT">count</a></code></li>
+<li><code><a href="#FOR:FROM">from</a></code></li>
+<li><code><a href="#FOR:IN">in</a></code></li>
+<li><code><a href="#FOR:MAXIMIZING">maximizing</a></code> / <code><a href="#FOR:MAXIMIZE">maximize</a></code></li>
+<li><code><a href="#FOR:MINIMIZING">minimizing</a></code> / <code><a href="#FOR:MINIMIZE">minimize</a></code></li>
+<li><code><a href="#FOR:NCONCING">nconcing</a></code> / <code><a href="#FOR:NCONC">nconc</a></code></li>
+<li><code><a href="#FOR:ON">on</a></code></li>
+<li><code><a href="#FOR:OVER">over</a></code></li>
+<li><code><a href="#FOR:REDUCING">reducing</a></code> / <code><a href="#FOR:REDUCE">reduce</a></code></li>
+<li><code><a href="#FOR:REPEATING">repeating</a></code> / <code><a href="#FOR:REPEAT">repeat</a></code></li>
+<li><code><a href="#FOR:SUMMING">summing</a></code> / <code><a href="#FOR:SUM">sum</a></code></li>
+<li><code><a href="#FOR:SYMBOLS">symbols</a></code></li>
+<li><code><a href="#FOR:TABLE-KEYS">table-keys</a></code></li>
+<li><code><a href="#FOR:TABLE-PAIRS">table-pairs</a></code></li>
+<li><code><a href="#FOR:TABLE-VALUES">table-values</a></code></li>
+<li><code><a href="#FOR:UPDATING">updating</a></code> / <code><a href="#FOR:UPDATE">update</a></code></li>
+</ul>
+
+<p>The following clauses are included in the <code>for-minimal</code> package:</p>
+
+<ul>
+<li><code><a href="#FOR:ALWAYS">always</a></code></li>
+<li><code><a href="#FOR:NEVER">never</a></code></li>
+<li><code><a href="#FOR:RETURNING">returning</a></code></li>
+<li><code><a href="#FOR:THEREIS">thereis</a></code></li>
+<li><code><a href="#FOR:UNTIL">until</a></code></li>
+<li><code><a href="#FOR:WHILE">while</a></code></li>
+</ul>
+
+<p>Note that clauses must appear as a &quot;top-level&quot; form within the <code><a href="#FOR:FOR">for</a></code> body and cannot appear as the result of a macroexpansion.</p>
+
+<h2>Extending FOR</h2>
+
+<p>Both bindings and clauses are defined in terms of functions that return three values:</p>
+
+<ol>
+<li>A surrounding form
+   Surrounding forms will be wrapped around the rest of the expanded for by appending the rest to it. This happens through <code><a href="#FOR:WITH-INTERLEAVING">with-interleaving</a></code>.</li>
+<li>A loop body form
+   The body form is put inside the loop where it will be evaluated once per iteration.</li>
+<li>A return value form
+   The return value form is evaluated on loop end. The position within the returned values is dependent on the clauses and bindings present during expansion. If not provided, no return value is generated. Note that this is distinct from having NIL as a third value.</li>
+</ol>
+
+<p>Passed to the functions are the literal arguments used in the binding or clause expression. In that way, a clause/binding function must work just like a macro would.</p>
+
+<h3>Bindings</h3>
+
+<p>The most primitive way to define bindings is through the <code><a href="#FOR:DEFINE-DIRECT-BINDING">define-direct-binding</a></code> macro. This defines a verbatim binding function as described above. Note that the loop body forms of bindings will always be evaluated before the proper for body. </p>
+
+<p>In most cases you will want the arguments that are passed to the binding to be evaluated only once, before the loop starts properly. The <code><a href="#FOR:DEFINE-VALUE-BINDING">define-value-binding</a></code> macro will help you with that. Each argument you specify will be bound to a gensym within the definition body, and is automatically expanded to a variable with the value that is used in the binding. <code>&amp;aux</code> arguments receive special treatment as they are expanded like regular variables and thus allow you to easily define helper variables necessary during iteration.</p>
+
+<p>Let's look at an example binding definition:</p>
+
+<pre><code>(<a href="#FOR:DEFINE-VALUE-BINDING">define-value-binding</a> across (var vector &amp;aux (i -1) (<a href="http://l1sp.org/cl/length">length</a> (<a href="http://l1sp.org/cl/length">length</a> vector)))
+  `(<a href="http://l1sp.org/cl/if">if</a> (<a href="#FOR:=">=</a> ,length (<a href="http://l1sp.org/cl/incf">incf</a> ,i))
+       (<a href="#FOR:END-FOR">end-for</a>)
+       (<a href="#FOR:UPDATE">update</a> ,var (<a href="http://l1sp.org/cl/aref">aref</a> ,vector ,i))))
+</code></pre>
+
+<p>Expanding a simple call <code>(<a href="#FOR:FOR">for</a> ((a across vec)))</code> results in this expansion (after cleaning it up a little):</p>
+
+<pre><code>(<a href="http://l1sp.org/cl/let*">LET*</a> ((#:VECTOR VEC)
+       (#:I -1)
+       (#:LENGTH (<a href="http://l1sp.org/cl/length">LENGTH</a> #:VECTOR))
+       (A NIL))
+  (WITH-FOR-BODY
+    (<a href="http://l1sp.org/cl/if">IF</a> (<a href="#FOR:=">=</a> #:LENGTH (<a href="http://l1sp.org/cl/incf">INCF</a> #:I))
+        (<a href="#FOR:END-FOR">END-FOR</a>)
+        (<a href="#FOR:UPDATE">UPDATE</a> A (<a href="http://l1sp.org/cl/aref">AREF</a> #:VECTOR #:I))))
+</code></pre>
+
+<p>As you can see, our only argument, <code><a href="http://l1sp.org/cl/vector">vector</a></code> got expanded into a gensym-ed variable that is bound to the result of the <code><a href="http://l1sp.org/cl/vector">vector</a></code> argument. Our auxiliary variables received similar treatment. Note that references to other arguments automatically get translated to their proper gensyms.</p>
+
+<p>In some cases however you'd like to re-evaluate an argument each iteration. To get this behaviour, you can use <code><a href="#FOR:DEFINE-FORM-BINDING">define-form-binding</a></code>. Here's a simple example:</p>
+
+<pre><code> (<a href="#FOR:DEFINE-FORM-BINDING">define-form-binding</a> = (var form)
+   `(<a href="#FOR:UPDATE">update</a> ,var ,form))
+</code></pre>
+
+<p>Expanding a simple call <code>(<a href="#FOR:FOR">for</a> ((a = (<a href="http://l1sp.org/cl/*">*</a> 2 2))))</code> presents us with:</p>
+
+<pre><code> (<a href="http://l1sp.org/cl/let*">LET*</a> ((A NIL))
+   (WITH-FOR-BODY
+     (<a href="#FOR:UPDATE">UPDATE</a> A (<a href="http://l1sp.org/cl/*">*</a> 2 2)))
+</code></pre>
+
+<p>Usually you will want form bindings if you want to accumulate the results of it over time in some manner. In that case you usually also want to return the result of the accumulation once you're done. <code>define-accumulation-binding</code> does exactly that. One note about form bindings is that the auxiliary variables still act the same as in the value bindings-- they automatically get expanded to bindings in the resulting loop construct.</p>
+
+<p>Let's look at an example that shows both:</p>
+
+<pre><code>(define-accumulation-binding collecting (var form &amp;aux (head (<a href="http://l1sp.org/cl/cons">cons</a> NIL NIL)) (tail head))
+  `(<a href="http://l1sp.org/cl/setf">setf</a> ,tail (<a href="http://l1sp.org/cl/setf">setf</a> (<a href="http://l1sp.org/cl/cdr">cdr</a> ,tail) (<a href="http://l1sp.org/cl/cons">cons</a> ,form NIL))
+         ,var (<a href="http://l1sp.org/cl/cdr">cdr</a> ,head)))
+</code></pre>
+
+<p>Expanding <code>(<a href="#FOR:FOR">for</a> ((a collecting 2)))</code> results in:</p>
+
+<pre><code>(<a href="http://l1sp.org/cl/let*">LET*</a> ((#:HEAD (<a href="http://l1sp.org/cl/cons">CONS</a> NIL NIL)) (#:TAIL #:HEAD) (A NIL))
+  (WITH-FOR-BODY
+   (<a href="http://l1sp.org/cl/setf">SETF</a> #:TAIL (<a href="http://l1sp.org/cl/setf">SETF</a> (<a href="http://l1sp.org/cl/cdr">CDR</a> #:TAIL) (<a href="http://l1sp.org/cl/cons">CONS</a> 2 NIL))
+         A (<a href="http://l1sp.org/cl/cdr">CDR</a> #:HEAD))
+   (<a href="#FOR:RETURN-FOR">RETURN-FOR</a> A))
+</code></pre>
+
+<p>As before, the auxiliary arguments got expanded to variable bindings with their respective default values.</p>
+
+<p>Finally we have two variants of form and value bindings, <code><a href="#FOR:DEFINE-FORM-SYMBOL-MACRO-BINDING">define-form-symbol-macro-binding</a></code> and <code><a href="#FOR:DEFINE-VALUE-SYMBOL-MACRO-BINDING">define-value-symbol-macro-binding</a></code>. The difference to the previous definition forms here is that the <code>var</code> is not bound as a variable, but instead as a symbol macro. Its default value is the symbol-macro expansion. This is useful if you want to provide an updateable place as the iteration var, as is the case with the <code><a href="#FOR:UPDATING">updating</a></code> binding.</p>
+
+<h3>Clauses</h3>
+
+<p>Clauses work the exact same as bindings in terms of the base function, which you can define with <code>define-direct-clause</code>. Unlike bindings however, clauses simply get the body of their call as arguments, without an iteration var.</p>
+
+<p>In order to ease things a bit there is also <code>define-simple-clause</code> which provides the same handling for arguments as <code><a href="#FOR:DEFINE-FORM-BINDING">define-form-binding</a></code> does.</p>
+
+<p>One thing to note is that the surrounding forms of clauses always appear deeper than those of bindings and that the result value forms of clauses always appear before those of bindings. The loop body form of a clause appears at the exact position in the body where the clause expression previously appeared.</p>
+
+<h3>Iterators</h3>
+
+<p>In order to provide the generic <code><a href="#FOR:OVER">over</a></code> iteration construct, For includes a protocol to define iterators. In order for an iterator to work, it has to subclass <code><a href="#FOR-ITERATOR:ITERATOR">iterator</a></code> and provide three methods: <code><a href="#FOR-ITERATOR:MAKE-ITERATOR">make-iterator</a></code>, <code><a href="#FOR-ITERATOR:HAS-MORE">has-more</a></code>, and <code><a href="#FOR-ITERATOR:NEXT">next</a></code>. The first is merely there so that we can dispatch on the type of object we'd like to iterate over and construct an appropriate iterator for it. The second should return a generalised boolean that tells us whether we can safely call <code><a href="#FOR-ITERATOR:NEXT">next</a></code>. Finally, <code><a href="#FOR-ITERATOR:NEXT">next</a></code> itself advances the iterator and returns a new element. If sensible and possible, a method on <code>(<a href="http://l1sp.org/cl/setf">setf</a> current)</code> can also be provided to allow updating the current element to a new value.</p>
+
+<p>Let's look at the list iterator as an example:</p>
+
+<pre><code>(<a href="http://l1sp.org/cl/defclass">defclass</a> list-iterator (<a href="#FOR-ITERATOR:ITERATOR">iterator</a>)
+  ())
+
+(<a href="http://l1sp.org/cl/defmethod">defmethod</a> initialize-instance :after ((iterator list-iterator) &amp;key object)
+  (<a href="http://l1sp.org/cl/setf">setf</a> (<a href="#FOR-ITERATOR:OBJECT">object</a> iterator) (<a href="http://l1sp.org/cl/cons">cons</a> NIL object)))
+
+(<a href="http://l1sp.org/cl/defmethod">defmethod</a> has-more ((iterator list-iterator))
+  (<a href="http://l1sp.org/cl/cdr">cdr</a> (<a href="#FOR-ITERATOR:OBJECT">object</a> iterator)))
+
+(<a href="http://l1sp.org/cl/defmethod">defmethod</a> next ((iterator list-iterator))
+  (<a href="http://l1sp.org/cl/setf">setf</a> (<a href="#FOR-ITERATOR:OBJECT">object</a> iterator) (<a href="http://l1sp.org/cl/cdr">cdr</a> (<a href="#FOR-ITERATOR:OBJECT">object</a> iterator)))
+  (<a href="http://l1sp.org/cl/car">car</a> (<a href="#FOR-ITERATOR:OBJECT">object</a> iterator)))
+
+(<a href="http://l1sp.org/cl/defmethod">defmethod</a> (<a href="http://l1sp.org/cl/setf">setf</a> current) (value (<a href="#FOR-ITERATOR:ITERATOR">iterator</a> list-iterator))
+  (<a href="http://l1sp.org/cl/setf">setf</a> (<a href="http://l1sp.org/cl/car">car</a> (<a href="#FOR-ITERATOR:OBJECT">object</a> iterator)) value))
+
+(<a href="http://l1sp.org/cl/defmethod">defmethod</a> make-iterator ((list list) &amp;key)
+  (<a href="http://l1sp.org/cl/make-instance">make-instance</a> 'list-iterator :object list))
+</code></pre>
+
+<p>First we subclass <code><a href="#FOR-ITERATOR:ITERATOR">iterator</a></code>. Next we define an initialize method in order to prepend a cons to the list. We do this so that we know the next element will always be in the cadr of the <code><a href="#FOR-ITERATOR:OBJECT">object</a></code> and we can still set the car of the current cons cell to update it. The <code><a href="#FOR-ITERATOR:HAS-MORE">has-more</a></code> test is implemented accordingly. On <code><a href="#FOR-ITERATOR:NEXT">next</a></code> we then simply pop off the first cons and return our new current element. The <code>(<a href="http://l1sp.org/cl/setf">setf</a> current)</code> can then just update the car of the <code><a href="#FOR-ITERATOR:OBJECT">object</a></code>. Finally we need a <code><a href="#FOR-ITERATOR:MAKE-ITERATOR">make-iterator</a></code> method to dispatch on lists.</p>
+</span>
+        
+      </article>
+      <article>
+        
+          <h2>Copyright</h2>
+          <span>for</span> is licensed under the <span><a href="https://tldrlegal.com/search?q=Artistic">Artistic</a></span> license.
+          
+            © <span>Nicolas Hafner &lt;shinmera@tymoon.eu&gt;</span>
+            .
+          
+          This library can be obtained on <a href="https://github.com/Shinmera/for">https://github.com/Shinmera/for</a>.
+        
+      </article>
+      
+        <article id="symbol-index">
+          <h2>Package Index</h2>
+          <ul><li class="package">
+              <h3>
+                <a name="FOR" href="#FOR">FOR</a>
+                <span class="nicknames">(ORG.SHIRAKUMO.FOR)</span>
+              </h3>
+              <ul><li>
+                  <a name="FOR:BINDING"/>
+                  <article>
+                    <header class="accessor">
+                      <span class="type">accessor</span>
+                      <code>
+                        <h4><a href="#FOR:BINDING" class="name">BINDING</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(NAME)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Accessor to the function that compiles the given binding.
+
+If there is no binding named by the given symbol directly, another search is
+performed using the symbol with the same symbol-name from the FOR package.
+
+See REMOVE-BINDING</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:CLAUSE"/>
+                  <article>
+                    <header class="accessor">
+                      <span class="type">accessor</span>
+                      <code>
+                        <h4><a href="#FOR:CLAUSE" class="name">CLAUSE</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(NAME)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Accessor to the function that compiles the given clause.
+
+If there is no clause named by the given symbol directly, another search is
+performed using the symbol with the same symbol-name from the FOR package.
+
+See REMOVE-CLAUSE</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:="/>
+                  <article>
+                    <header class="function">
+                      <span class="type">function</span>
+                      <code>
+                        <h4><a href="#FOR:=" class="name">=</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(NUMBER &amp;REST MORE-NUMBERS)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Return T if all of its arguments are numerically equal, NIL otherwise.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:APPEND"/>
+                  <article>
+                    <header class="function">
+                      <span class="type">function</span>
+                      <code>
+                        <h4><a href="#FOR:APPEND" class="name">APPEND</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(&amp;REST LISTS)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Construct a new list by concatenating the list arguments</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:COUNT"/>
+                  <article>
+                    <header class="function">
+                      <span class="type">function</span>
+                      <code>
+                        <h4><a href="#FOR:COUNT" class="name">COUNT</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(ITEM SEQUENCE &amp;REST ARGS &amp;KEY FROM-END (START 0) (END NIL) (KEY NIL)
+ (TEST (FUNCTION EQL) TEST-P) (TEST-NOT NIL TEST-NOT-P))</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Return the number of elements in SEQUENCE satisfying a test with ITEM,
+   which defaults to EQL.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:NCONC"/>
+                  <article>
+                    <header class="function">
+                      <span class="type">function</span>
+                      <code>
+                        <h4><a href="#FOR:NCONC" class="name">NCONC</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(&amp;REST LISTS)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Concatenates the lists given as arguments (by changing them)</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:REDUCE"/>
+                  <article>
+                    <header class="function">
+                      <span class="type">function</span>
+                      <code>
+                        <h4><a href="#FOR:REDUCE" class="name">REDUCE</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(FUNCTION SEQUENCE &amp;REST ARGS &amp;KEY (KEY NIL) FROM-END (START 0) (END NIL)
+ (INITIAL-VALUE NIL IVP))</span>
+                      </code>
+                    </header>
+                    <pre class="docstring"/>
+                  </article>
+                </li><li>
+                  <a name="FOR:REMOVE-BINDING"/>
+                  <article>
+                    <header class="function">
+                      <span class="type">function</span>
+                      <code>
+                        <h4><a href="#FOR:REMOVE-BINDING" class="name">REMOVE-BINDING</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(NAME)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Removes the given binding function.
+
+See BINDING</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:REMOVE-CLAUSE"/>
+                  <article>
+                    <header class="function">
+                      <span class="type">function</span>
+                      <code>
+                        <h4><a href="#FOR:REMOVE-CLAUSE" class="name">REMOVE-CLAUSE</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(NAME)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Removes the given clause function.
+
+See CLAUSE</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:="/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:=" class="name">=</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR FORM)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Updates the var by the value of the given form every time.
+
+Supports UPDATE.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:ACROSS"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:ACROSS" class="name">ACROSS</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR VECTOR)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Iterates over a vector, binding the current item to the var every time.
+
+Supports UPDATE.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:APPEND"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:APPEND" class="name">APPEND</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR FORM)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Appends the results of FORM into a list where the VAR points to the head of the list.
+
+This returns the var on END-FOR.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:APPENDING"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:APPENDING" class="name">APPENDING</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR FORM)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Appends the results of FORM into a list where the VAR points to the head of the list.
+
+This returns the var on END-FOR.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:AS"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:AS" class="name">AS</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR VALUE)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Simply binds the value of the form to the var.
+
+This returns the var on END-FOR.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:BETWEEN"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:BETWEEN" class="name">BETWEEN</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR FROM TO &amp;KEY (BY 1))</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Iterates the var over the given range.
+
+Ranges can be either decreasing or increasing. The starting value is inclusive, whereas
+the ending value is exclusive. This means that (a between 0 2) iterates over 0 and 1.
+
+An optional BY keyword argument is accepted, which determines the step.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:COLLECT"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:COLLECT" class="name">COLLECT</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR FORM)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Collects the results of FORM into a list where the VAR points to the head of the list.
+
+This returns the var on END-FOR.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:COLLECTING"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:COLLECTING" class="name">COLLECTING</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR FORM)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Collects the results of FORM into a list where the VAR points to the head of the list.
+
+This returns the var on END-FOR.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:COUNT"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:COUNT" class="name">COUNT</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR FORM)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Increases the var by one if the FORM returns non-NIL.
+
+This returns the var on END-FOR.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:COUNTING"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:COUNTING" class="name">COUNTING</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR FORM)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Increases the var by one if the FORM returns non-NIL.
+
+This returns the var on END-FOR.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:FROM"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:FROM" class="name">FROM</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR FROM &amp;KEY (BY 1))</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Increases the var by a step every time.
+
+An optional BY keyword argument is accepted, which determines the step.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:IN"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:IN" class="name">IN</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR LIST &amp;KEY (BY NIL BY-P))</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Iterates over a list, binding the current list element to the var every time.
+
+Supports UPDATE.
+
+Accepts a BY keyword argument, which determines how the list is stepped.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:MAXIMIZE"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:MAXIMIZE" class="name">MAXIMIZE</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR FORM)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Sets the var to the maximum of the values returned by FORM so far each step.
+
+This returns the var on END-FOR.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:MAXIMIZING"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:MAXIMIZING" class="name">MAXIMIZING</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR FORM)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Sets the var to the maximum of the values returned by FORM so far each step.
+
+This returns the var on END-FOR.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:MINIMIZE"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:MINIMIZE" class="name">MINIMIZE</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR FORM)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Sets the var to the minimum of the values returned by FORM so far each step.
+
+This returns the var on END-FOR.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:MINIMIZING"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:MINIMIZING" class="name">MINIMIZING</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR FORM)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Sets the var to the minimum of the values returned by FORM so far each step.
+
+This returns the var on END-FOR.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:NCONC"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:NCONC" class="name">NCONC</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR FORM)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Appends the results of FORM destructively into a list where the VAR points to the head of the list.
+
+This returns the var on END-FOR.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:NCONCING"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:NCONCING" class="name">NCONCING</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR FORM)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Appends the results of FORM destructively into a list where the VAR points to the head of the list.
+
+This returns the var on END-FOR.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:ON"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:ON" class="name">ON</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR LIST &amp;KEY (BY NIL BY-P))</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Iterates over a list, binding the current list cons to the var every time.
+
+Supports UPDATE.
+
+Accepts a BY keyword argument, which determines how the list is stepped.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:OVER"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:OVER" class="name">OVER</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR ITERABLE &amp;REST ITERATOR-ARGS)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Iterates over a generic sequence using an ITERATOR, binding the current item to the var every step.
+
+Supports UPDATE.
+
+Potentially accepts arbitrary arguments, depending on which iterator is selected
+for the respective object.
+
+See FOR-ITERATOR:MAKE-ITERATOR</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:REDUCE"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:REDUCE" class="name">REDUCE</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR FORM &amp;KEY (BY NIL BY-P))</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Combines the results of FORM by a combination function BY into var.
+
+On the first iteration the var is simply set to the result of the FORM. On every
+successive step, the var is set to the result of calling BY with the var as the
+first argument and the result of the FORM as the second argument.
+
+This returns the var on END-FOR.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:REDUCING"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:REDUCING" class="name">REDUCING</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR FORM &amp;KEY (BY NIL BY-P))</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Combines the results of FORM by a combination function BY into var.
+
+On the first iteration the var is simply set to the result of the FORM. On every
+successive step, the var is set to the result of calling BY with the var as the
+first argument and the result of the FORM as the second argument.
+
+This returns the var on END-FOR.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:REPEAT"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:REPEAT" class="name">REPEAT</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR LIMIT)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Increases the var the given amount of times starting with 1.
+
+This is the same as (a between 1 n)</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:REPEATING"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:REPEATING" class="name">REPEATING</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR LIMIT)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Increases the var the given amount of times starting with 1.
+
+This is the same as (a between 1 n)</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:SUM"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:SUM" class="name">SUM</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR FORM)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Sums up the value of the FORM into the var.
+
+This returns the var on END-FOR.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:SUMMING"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:SUMMING" class="name">SUMMING</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR FORM)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Sums up the value of the FORM into the var.
+
+This returns the var on END-FOR.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:SYMBOLS"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:SYMBOLS" class="name">SYMBOLS</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR PACKAGE &amp;REST STATUS)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Iterates over the symbols of a package, binding the current symbol to the var every time.
+
+Accepts an optional list of arguments that qualify the type of symbols to iterate over.
+Each type must be one of :INTERNAL :EXTERNAL :INHERITED. If no arguments are given, it
+defaults to (:INTERNAL :EXTERNAL :INHERITED).</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:TABLE-KEYS"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:TABLE-KEYS" class="name">TABLE-KEYS</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR TABLE)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Iterates over a hash table, binding the current key to the var every time.
+
+Supports UPDATE.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:TABLE-PAIRS"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:TABLE-PAIRS" class="name">TABLE-PAIRS</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR TABLE)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Iterates over a hash table, binding a list of the current key and value to the var every time.
+
+Supports UPDATE.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:TABLE-VALUES"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:TABLE-VALUES" class="name">TABLE-VALUES</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR TABLE)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Iterates over a hash table, binding the current value to the var every time.
+
+Supports UPDATE.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:UPDATE"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:UPDATE" class="name">UPDATE</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR ITERABLE &amp;REST ITERATOR-ARGS)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Iterates over a generic sequence using an ITERATOR, with var being symbol macro to the current item.
+
+You may SETF the var to update the item in the sequence, if the underlying iterator
+supports doing so.
+
+Potentially accepts arbitrary arguments, depending on which iterator is selected
+for the respective object.
+
+See FOR-ITERATOR:MAKE-ITERATOR</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:UPDATING"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:UPDATING" class="name">UPDATING</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR ITERABLE &amp;REST ITERATOR-ARGS)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Iterates over a generic sequence using an ITERATOR, with var being symbol macro to the current item.
+
+You may SETF the var to update the item in the sequence, if the underlying iterator
+supports doing so.
+
+Potentially accepts arbitrary arguments, depending on which iterator is selected
+for the respective object.
+
+See FOR-ITERATOR:MAKE-ITERATOR</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:ALWAYS"/>
+                  <article>
+                    <header class="clause">
+                      <span class="type">clause</span>
+                      <code>
+                        <h4><a href="#FOR:ALWAYS" class="name">ALWAYS</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(FORM)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">If FORM always returns non-NIL, then T is returned.
+As soon as FORM returns NIL the for is aborted with END-FOR and NIL is returned.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:NEVER"/>
+                  <article>
+                    <header class="clause">
+                      <span class="type">clause</span>
+                      <code>
+                        <h4><a href="#FOR:NEVER" class="name">NEVER</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(FORM)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">If FORM never returns non-NIL, then T is returned.
+As soon as FORM returns non-NIL the for is aborted with END-FOR and NIL is returned.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:REPEAT"/>
+                  <article>
+                    <header class="clause">
+                      <span class="type">clause</span>
+                      <code>
+                        <h4><a href="#FOR:REPEAT" class="name">REPEAT</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(N)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Makes sure the loop body is repeated a maximum of N times.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:RETURNING"/>
+                  <article>
+                    <header class="clause">
+                      <span class="type">clause</span>
+                      <code>
+                        <h4><a href="#FOR:RETURNING" class="name">RETURNING</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(FORM)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Does nothing each step, but makes sure to evaluate and return the value of FORM on END-FOR.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:THEREIS"/>
+                  <article>
+                    <header class="clause">
+                      <span class="type">clause</span>
+                      <code>
+                        <h4><a href="#FOR:THEREIS" class="name">THEREIS</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(FORM)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">If FORM never returns non-NIL, then NIL is returned.
+As soon as FORM returns non-NIL the for is aborted with END-FOR and the non-NIL value is returned.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:UNTIL"/>
+                  <article>
+                    <header class="clause">
+                      <span class="type">clause</span>
+                      <code>
+                        <h4><a href="#FOR:UNTIL" class="name">UNTIL</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(FORM)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">When FORM returns non-NIL, END-FOR is called.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:WHILE"/>
+                  <article>
+                    <header class="clause">
+                      <span class="type">clause</span>
+                      <code>
+                        <h4><a href="#FOR:WHILE" class="name">WHILE</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(FORM)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">When FORM returns NIL, END-FOR is called.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:DEFINE-ALIAS-BINDING"/>
+                  <article>
+                    <header class="macro">
+                      <span class="type">macro</span>
+                      <code>
+                        <h4><a href="#FOR:DEFINE-ALIAS-BINDING" class="name">DEFINE-ALIAS-BINDING</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(&amp;REST ARGS)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Defines an alias for a binding.
+
+See BINDING</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:DEFINE-DIRECT-BINDING"/>
+                  <article>
+                    <header class="macro">
+                      <span class="type">macro</span>
+                      <code>
+                        <h4><a href="#FOR:DEFINE-DIRECT-BINDING" class="name">DEFINE-DIRECT-BINDING</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(&amp;REST ARGS)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Defines a binding function.
+
+Binding functions can return three values:
+
+1. A single &quot;surrounding form&quot; that will go around the resulting loop. If you
+   require multiple surrounding forms, you can use WITH-INTERLEAVING.
+2. A form to run during each iteration. They will be run before any body forms.
+3. A form whose value is returned by the FOR.
+
+The arguments that the function receives are directly translated from the
+respective binding expression. One argument will always be passed in the
+very least: the variable specified for the binding.
+
+Note that a binding function receives its arguments as literals and thus must
+process them like a macro would (destructive operations are bad juju).
+
+See BINDING
+See REMOVE-BINDING</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:DEFINE-FORM-BINDING"/>
+                  <article>
+                    <header class="macro">
+                      <span class="type">macro</span>
+                      <code>
+                        <h4><a href="#FOR:DEFINE-FORM-BINDING" class="name">DEFINE-FORM-BINDING</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(&amp;REST ARGS)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Defines a binding that receives its arguments as literals.
+
+&amp;AUX variables in the ARGS lambda-list receive special treatment: they are
+bound to gensyms within the definition body. Their value is only evaluated
+and set within the expanded binding. This means that &amp;AUX variables give you a
+convenient way to introduce necessary helper variables to the expanded binding.
+References to other AUX variables or the VAR are automatically rewritten to
+the appropriate gensym.
+
+VAR can also accept a default value, which receives the same semantic treatment
+as &amp;AUX variables do, with the exception that it is always the last binding to
+be evaluated in the resulting expansion, meaning every other &amp;AUX variable can
+be referenced.
+
+The primary value returned must be the form to be evaluated on each iteration.
+A secondary value may be returned, which is a form to be evaluated when the
+loop ends normally.
+
+See DEFINE-DIRECT-BINDING
+See DEFINE-VALUE-BINDING</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:DEFINE-FORM-SYMBOL-MACRO-BINDING"/>
+                  <article>
+                    <header class="macro">
+                      <span class="type">macro</span>
+                      <code>
+                        <h4><a href="#FOR:DEFINE-FORM-SYMBOL-MACRO-BINDING" class="name">DEFINE-FORM-SYMBOL-MACRO-BINDING</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(&amp;REST ARGS)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Defines a binding that receives its arguments as literals and treats the VAR as a symbol-macro.
+
+This is the exact same as DEFINE-FORM-BINDING with the exception that the
+VAR is translated into a symbol-macro binding. Its value is still translated
+accordingly to make sure references to AUX variables stay intact.
+
+See DEFINE-FORM-BINDING</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:DEFINE-VALUE-BINDING"/>
+                  <article>
+                    <header class="macro">
+                      <span class="type">macro</span>
+                      <code>
+                        <h4><a href="#FOR:DEFINE-VALUE-BINDING" class="name">DEFINE-VALUE-BINDING</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(&amp;REST ARGS)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Defines a binding that receives its arguments as values.
+
+The treatment of all arguments in the ARGS lambda-list is as follows:
+Within the definition body, they are bound to gensyms. Upon expansion of the
+binding, each variable is expanded to a variable binding with the respective
+value that was passed to the binding definition. Special exception is made for
+the present-p optional variables that can be specified for optional or key
+arguments, which are bound as usual in the definition body such that expansion
+may be aware of which parameters were passed. In essence, you can interpret all
+arguments as if treated by ONCE-ONLY.
+
+&amp;AUX variables in the args lambda-list receive special treatment: they are
+bound to gensyms within the definition body. Their value is only evaluated
+and set within the expanded binding. This means that AUX variables give you a
+convenient way to introduce necessary helper variables to the expanded binding.
+References to other arguments or the VAR are automatically rewritten to
+the appropriate gensym.
+
+VAR can also accept a default value, which receives the same semantic treatment
+as &amp;AUX variables do, with the exception that it is always the last binding to
+be evaluated in the resulting expansion, meaning every other argument can
+be referenced.
+
+The primary value returned must be the form to be evaluated on each iteration.
+A secondary value may be returned, which is a form to be evaluated when the
+loop ends normally.
+
+See DEFINE-FORM-BINDING
+See DEFINE-DIRECT-BINDING</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:DEFINE-VALUE-SYMBOL-MACRO-BINDING"/>
+                  <article>
+                    <header class="macro">
+                      <span class="type">macro</span>
+                      <code>
+                        <h4><a href="#FOR:DEFINE-VALUE-SYMBOL-MACRO-BINDING" class="name">DEFINE-VALUE-SYMBOL-MACRO-BINDING</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(&amp;REST ARGS)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Defines a binding that receives its arguments as values and treats the VAR as a symbol-macro.
+
+This is the exact same as DEFINE-VALUE-BINDING with the exception that the
+VAR is translated into a symbol-macro binding. Its value is still translated
+accordingly to make sure references to arguments stay intact.
+
+See DEFINE-VALUE-BINDING</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:FOR"/>
+                  <article>
+                    <header class="macro">
+                      <span class="type">macro</span>
+                      <code>
+                        <h4><a href="#FOR:FOR" class="name">FOR</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(&amp;REST ARGS)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Loops the body with the given bindings established.
+
+Each binding should have the form (var binding-type args*)
+
+Sometimes a var can be either a single symbol denoting a variable, or a
+lambda-list to which the result is destructured and bound via UPDATE.
+The support thereof depends on the binding construct.
+
+Within the body, special iteration clauses may be present. A clause must appear
+at the &quot;top-level&quot; of the body and cannot appear as a macro-expansion.
+
+If the loop is terminated normally by END-FOR then multiple values may be returned
+depending on how many bindings or clauses are present that want to return values.
+The order of the values is as follows: the clause values are returned in the
+order that the clauses appear in the body, followed by the binding values in the
+order of the binding expressions.
+
+The loop may also be terminated abnormally by a direct call to RETURN-FOR or RETURN.
+
+See UPDATE
+See BINDING
+See CLAUSE
+See END-FOR
+See SKIP-FOR
+See RETURN-FOR
+See WITH-FOR-TAGBODY
+See WITH-FOR-BLOCK
+See CONVERT-BINDINGS
+See CONVERT-CLAUSES</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:UPDATE"/>
+                  <article>
+                    <header class="macro">
+                      <span class="type">macro</span>
+                      <code>
+                        <h4><a href="#FOR:UPDATE" class="name">UPDATE</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(&amp;REST ARGS)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Allows updating the PLACE with a new value.
+
+Unlike just (setf place value), PLACE can also be a lambda-list where each variable
+is then properly updated with the respective element from value list.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:WITH-INTERLEAVING"/>
+                  <article>
+                    <header class="macro">
+                      <span class="type">macro</span>
+                      <code>
+                        <h4><a href="#FOR:WITH-INTERLEAVING" class="name">WITH-INTERLEAVING</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(&amp;REST ARGS)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Interleave the body forms.
+
+Essentially this means that the last form is appended to the form before it
+and this is then appended to the form before that, and so on.</pre>
+                  </article>
+                </li></ul>
+            </li><li class="package">
+              <h3>
+                <a name="FOR-ITERATOR" href="#FOR-ITERATOR">FOR-ITERATOR</a>
+                <span class="nicknames">(ORG.SHIRAKUMO.FOR.ITERATOR)</span>
+              </h3>
+              <ul><li>
+                  <a name="FOR-ITERATOR:ARRAY-ITERATOR"/>
+                  <article>
+                    <header class="class">
+                      <span class="type">class</span>
+                      <code>
+                        <h4><a href="#FOR-ITERATOR:ARRAY-ITERATOR" class="name">ARRAY-ITERATOR</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Iterator for general arrays.
+
+Supports setting the current element.
+
+See VECTOR-ITERATOR
+See TOTAL-LENGTH</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR-ITERATOR:DIRECTORY-ITERATOR"/>
+                  <article>
+                    <header class="class">
+                      <span class="type">class</span>
+                      <code>
+                        <h4><a href="#FOR-ITERATOR:DIRECTORY-ITERATOR" class="name">DIRECTORY-ITERATOR</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Iterator for a DIRECTORY listing.
+
+On construction, this performs a simple DIRECTORY call on the given object
+and then iterates over the result list of pathnames.
+
+See LIST-ITERATOR</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR-ITERATOR:HASH-TABLE-ITERATOR"/>
+                  <article>
+                    <header class="class">
+                      <span class="type">class</span>
+                      <code>
+                        <h4><a href="#FOR-ITERATOR:HASH-TABLE-ITERATOR" class="name">HASH-TABLE-ITERATOR</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring"/>
+                  </article>
+                </li><li>
+                  <a name="FOR-ITERATOR:ITERATOR"/>
+                  <article>
+                    <header class="class">
+                      <span class="type">class</span>
+                      <code>
+                        <h4><a href="#FOR-ITERATOR:ITERATOR" class="name">ITERATOR</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">An iterator is responsible for iterating over a given data structure.
+
+See HAS-MORE
+See NEXT
+See CURRENT
+See MAKE-ITERATOR
+See OBJECT</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR-ITERATOR:LIST-ITERATOR"/>
+                  <article>
+                    <header class="class">
+                      <span class="type">class</span>
+                      <code>
+                        <h4><a href="#FOR-ITERATOR:LIST-ITERATOR" class="name">LIST-ITERATOR</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Iterator for proper lists.
+
+Supports setting the current element.
+
+See ITERATOR</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR-ITERATOR:PACKAGE-ITERATOR"/>
+                  <article>
+                    <header class="class">
+                      <span class="type">class</span>
+                      <code>
+                        <h4><a href="#FOR-ITERATOR:PACKAGE-ITERATOR" class="name">PACKAGE-ITERATOR</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Iterator for the symbols in a package.
+
+The type of symbols that are iterated can be set through the :STATUS initarg, which must
+be a list containing any of the following keywords: :INTERNAL :EXTERNAL :INHERITED
+
+See PREFETCH
+See ITERATOR</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR-ITERATOR:RANDOM-ITERATOR"/>
+                  <article>
+                    <header class="class">
+                      <span class="type">class</span>
+                      <code>
+                        <h4><a href="#FOR-ITERATOR:RANDOM-ITERATOR" class="name">RANDOM-ITERATOR</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Iterator for random numbers.
+
+This iterator can be constructed through either a RANDOM-STATE object or through the
+:RANDOM keyword as an object. The argument for RANDOM that determines its limit can be
+passed through the :LIMIT initarg.
+
+See ITERATOR</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR-ITERATOR:STREAM-ITERATOR"/>
+                  <article>
+                    <header class="class">
+                      <span class="type">class</span>
+                      <code>
+                        <h4><a href="#FOR-ITERATOR:STREAM-ITERATOR" class="name">STREAM-ITERATOR</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Iterator for input streams.
+
+The stream is read through a buffer, the size of which can be set via the :BUFFER-SIZE
+initarg.
+
+Supports setting the &quot;current&quot; element if the stream supports writing to it of course.
+
+See BUFFER
+See INDEX
+See LIMIT
+See ITERATOR</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR-ITERATOR:VECTOR-ITERATOR"/>
+                  <article>
+                    <header class="class">
+                      <span class="type">class</span>
+                      <code>
+                        <h4><a href="#FOR-ITERATOR:VECTOR-ITERATOR" class="name">VECTOR-ITERATOR</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Iterator for vectors.
+
+Supports setting the current element.
+
+See START
+See ITERATOR</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR-ITERATOR:BUFFER"/>
+                  <article>
+                    <header class="accessor">
+                      <span class="type">accessor</span>
+                      <code>
+                        <h4><a href="#FOR-ITERATOR:BUFFER" class="name">BUFFER</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(OBJECT)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Accessor to the stream-iterator's buffer.
+
+See STREAM-ITERATOR</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR-ITERATOR:CURRENT"/>
+                  <article>
+                    <header class="accessor">
+                      <span class="type">accessor</span>
+                      <code>
+                        <h4><a href="#FOR-ITERATOR:CURRENT" class="name">CURRENT</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(ITERATOR)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Accessor to the current item of the iterator.
+
+The behaviour is undefined if CURRENT is used before NEXT has been called for a first time.
+Some (but not all) iterators may support setting the current element to a new value.
+
+See NEXT</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR-ITERATOR:INDEX"/>
+                  <article>
+                    <header class="accessor">
+                      <span class="type">accessor</span>
+                      <code>
+                        <h4><a href="#FOR-ITERATOR:INDEX" class="name">INDEX</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(OBJECT)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Accessor to the current index within the buffer.
+
+See STREAM-ITERATOR</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR-ITERATOR:LIMIT"/>
+                  <article>
+                    <header class="accessor">
+                      <span class="type">accessor</span>
+                      <code>
+                        <h4><a href="#FOR-ITERATOR:LIMIT" class="name">LIMIT</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(OBJECT)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Accessor to the amount of data that is currently filled in the buffer.
+
+See STREAM-ITERATOR</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR-ITERATOR:OBJECT"/>
+                  <article>
+                    <header class="accessor">
+                      <span class="type">accessor</span>
+                      <code>
+                        <h4><a href="#FOR-ITERATOR:OBJECT" class="name">OBJECT</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(OBJECT)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Accessor to the data structure the iterator is iterating over.
+
+Note that this is not necessarily the same object as what was passed into the
+constructor of the iterator. The iterator is free to modify this slot as it sees fit.
+
+See ITERATOR</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR-ITERATOR:PREFETCH"/>
+                  <article>
+                    <header class="accessor">
+                      <span class="type">accessor</span>
+                      <code>
+                        <h4><a href="#FOR-ITERATOR:PREFETCH" class="name">PREFETCH</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(OBJECT)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Cache for the next value
+
+Since the iterator constructs provided by CL do not allow merely testing whether a next
+element is available without losing it if there is one, we must cache the value on a
+HAS-MORE call and then use that on NEXT instead of calling the iterator function twice.
+
+See PACKAGE-ITERATOR
+See HASH-TABLE-ITERATOR</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR-ITERATOR:START"/>
+                  <article>
+                    <header class="accessor">
+                      <span class="type">accessor</span>
+                      <code>
+                        <h4><a href="#FOR-ITERATOR:START" class="name">START</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(OBJECT)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Accessor to the index that points to the next element of the vector-iterator.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR-ITERATOR:TOTAL-LENGTH"/>
+                  <article>
+                    <header class="accessor">
+                      <span class="type">accessor</span>
+                      <code>
+                        <h4><a href="#FOR-ITERATOR:TOTAL-LENGTH" class="name">TOTAL-LENGTH</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(OBJECT)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Slot holding the array-total-size.
+
+See ARRAY-ITERATOR</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR-ITERATOR:HASH-TABLE-ITERATOR"/>
+                  <article>
+                    <header class="function">
+                      <span class="type">function</span>
+                      <code>
+                        <h4><a href="#FOR-ITERATOR:HASH-TABLE-ITERATOR" class="name">HASH-TABLE-ITERATOR</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(TABLE)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Returns a function to iterate over a hash-table.
+
+See CL:WITH-HASH-TABLE-ITERATOR</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR-ITERATOR:PACKAGE-ITERATOR"/>
+                  <article>
+                    <header class="function">
+                      <span class="type">function</span>
+                      <code>
+                        <h4><a href="#FOR-ITERATOR:PACKAGE-ITERATOR" class="name">PACKAGE-ITERATOR</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(PACKAGE STATUSES)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Returns a function to iterate over a package's symbols.
+
+See CL:WITH-PACKAGE-ITERATOR</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR-ITERATOR:HAS-MORE"/>
+                  <article>
+                    <header class="generic">
+                      <span class="type">generic</span>
+                      <code>
+                        <h4><a href="#FOR-ITERATOR:HAS-MORE" class="name">HAS-MORE</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(ITERATOR)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Returns a generalised boolean indicating whether the iterator has more items or not.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR-ITERATOR:MAKE-ITERATOR"/>
+                  <article>
+                    <header class="generic">
+                      <span class="type">generic</span>
+                      <code>
+                        <h4><a href="#FOR-ITERATOR:MAKE-ITERATOR" class="name">MAKE-ITERATOR</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(OBJECT &amp;KEY LIMIT BUFFER-SIZE START &amp;ALLOW-OTHER-KEYS)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Create an iterator object for the given type of object.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR-ITERATOR:NEXT"/>
+                  <article>
+                    <header class="generic">
+                      <span class="type">generic</span>
+                      <code>
+                        <h4><a href="#FOR-ITERATOR:NEXT" class="name">NEXT</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(ITERATOR)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Advances the iterator by one item and returns the new item.
+
+The behaviour is undefined if the iterator does not have more items.
+
+See HAS-MORE</pre>
+                  </article>
+                </li></ul>
+            </li></ul>
+        </article>
+      
+    </div>
+  </body>
+</html>
