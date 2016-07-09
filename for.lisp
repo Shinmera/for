@@ -20,7 +20,7 @@
 
 (defmacro with-for-block (() &body body)
   `(block NIL
-     (macrolet ((return-for (&rest values) `(return ,@values)))
+     (macrolet ((return-for (&rest values) `(return (values ,@values))))
        ,@body)))
 
 (defmacro for (bindings &body body)
