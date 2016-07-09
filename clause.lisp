@@ -48,6 +48,7 @@
                            ,@result-let)
                      (declare (ignorable ,,@(mapcar #'delist outer-let))))
                   (let ,inner-let
+                    (declare (ignorable ,@(mapcar #'delist inner-let)))
                     ,@body))))))
 
 (defun convert-clauses (forms)

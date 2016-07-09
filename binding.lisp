@@ -97,6 +97,7 @@
                            ,varform)
                      (declare (ignorable ,,@(mapcar #'delist outer-let))))
                   (let ,inner-let
+                    (declare (ignorable ,@(mapcar #'delist inner-let)))
                     ,@body))))))
 
 (defmacro define-accumulation-binding (name (var &rest args) &body body)
@@ -115,6 +116,7 @@
                        (declare (ignorable ,,@(mapcar #'delist outer-let))))
                      (symbol-macrolet ,,varform))
                   (let ,inner-let
+                    (declare (ignorable ,@(mapcar #'delist inner-let)))
                     ,@body))))))
 
 (defmacro define-value-binding (name (var &rest args) &body body)
@@ -127,6 +129,7 @@
                              ,varform)
                        (declare (ignorable ,,@(mapcar #'delist outer-let))))
                     (let ,inner-let
+                      (declare (ignorable ,@(mapcar #'delist inner-let)))
                       ,@body)))))))
 
 (defmacro define-value-symbol-macro-binding (name (var &rest args) &body body)
@@ -140,6 +143,7 @@
                          (declare (ignorable ,,@(mapcar #'delist outer-let))))
                        (symbol-macrolet ,,varform))
                     (let ,inner-let
+                      (declare (ignorable ,@(mapcar #'delist inner-let)))
                       ,@body)))))))
 
 (defun convert-bindings (bindings)
