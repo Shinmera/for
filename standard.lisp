@@ -33,7 +33,12 @@
        (end-for)
        (update ,var (aref ,vector ,i))))
 
-(define-value-symbol-macro-binding over ((var (current iterator)) iterable &rest iterator-args &aux (iterator (apply #'make-iterator iterable iterator-args)))
+(define-value-binding over (var iterable &rest iterator-args &aux (iterator (apply #'make-iterator iterable iterator-args)))
+  `(if (has-more ,iterator)
+       (update ,var (next ,iterator))
+       (end-for)))
+
+(define-value-symbol-macro-binding updating ((var (current iterator)) iterable &rest iterator-args &aux (iterator (apply #'make-iterator iterable iterator-args)))
   `(if (has-more ,iterator)
        (next ,iterator)
        (end-for)))
@@ -157,6 +162,7 @@
   (values NIL
           form))
 
+(define-alias-binding update updating)
 (define-alias-binding repeat repeating)
 (define-alias-binding collect collecting)
 (define-alias-binding append appending)

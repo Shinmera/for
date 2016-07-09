@@ -49,6 +49,7 @@
    #:on
    #:across
    #:over
+   #:updating
    #:table-keys
    #:table-values
    #:table-pairs
@@ -71,6 +72,7 @@
    #:while
    #:until
    #:returning
+   #:update
    #:repeat
    #:collect
    #:append
