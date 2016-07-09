@@ -255,7 +255,7 @@ See WITH-FOR-BLOCK")
 Each binding should have the form (var binding-type args*)
 
 Sometimes a var can be either a single symbol denoting a variable, or a
-destructuring- lambda-list to which the result is destructured and bound via UPDATE.
+lambda-list to which the result is destructured and bound via UPDATE.
 The support thereof depends on the binding construct.
 
 Within the body, special iteration clauses may be present. A clause must appear
@@ -618,9 +618,8 @@ and this is then appended to the form before that, and so on.")
   (function update
     "Allows updating the PLACE with a new value.
 
-Unlike just (setf place value), PLACE can also be a destructuring-lambda-list
-where each variable is then properly updated with the respective element from
-value list.")
+Unlike just (setf place value), PLACE can also be a lambda-list where each variable
+is then properly updated with the respective element from value list.")
 
   (function hash-table-iterator
     "Returns a function to iterate over a hash-table.
