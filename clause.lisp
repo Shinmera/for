@@ -27,7 +27,7 @@
 
 (defmacro define-simple-clause (name args &body body)
   `(define-direct-clause ,name ,args
-     (values NIL (progn ,@body) NIL)))
+     (values* NIL (progn ,@body))))
 
 (defun convert-clauses (forms)
   (loop for form in forms
