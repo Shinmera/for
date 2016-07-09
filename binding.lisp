@@ -94,7 +94,8 @@
        (let ,outer-let
          (values* `(let* ,(list*
                            ,@result-let
-                           ,varform))
+                           ,varform)
+                     (declare (ignorable ,,@(mapcar #'delist outer-let))))
                   (let ,inner-let
                     ,@body))))))
 
@@ -110,7 +111,8 @@
        (let ,outer-let
          (values* `(with-interleaving
                      (let* ,(list
-                             ,@result-let))
+                             ,@result-let)
+                       (declare (ignorable ,,@(mapcar #'delist outer-let))))
                      (symbol-macrolet ,,varform))
                   (let ,inner-let
                     ,@body))))))
@@ -122,7 +124,8 @@
          (let ,outer-let
            (values* `(let* ,(list*
                              ,@result-let
-                             ,varform))
+                             ,varform)
+                       (declare (ignorable ,,@(mapcar #'delist outer-let))))
                     (let ,inner-let
                       ,@body)))))))
 
@@ -133,7 +136,8 @@
          (let ,outer-let
            (values* `(with-interleaving
                        (let* ,(list
-                               ,@result-let))
+                               ,@result-let)
+                         (declare (ignorable ,,@(mapcar #'delist outer-let))))
                        (symbol-macrolet ,,varform))
                     (let ,inner-let
                       ,@body)))))))

@@ -45,7 +45,8 @@
     `(define-direct-clause ,name ,(rest args)
        (let ,outer-let
          (values* `(let* ,(list
-                           ,@result-let))
+                           ,@result-let)
+                     (declare (ignorable ,,@(mapcar #'delist outer-let))))
                   (let ,inner-let
                     ,@body))))))
 
