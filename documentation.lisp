@@ -437,7 +437,7 @@ See ITERATOR"))
   (binding as
     "Simply binds the value of the form to the var.
 
-This is the same as if you were to use LET around the FOR directly.")
+This returns the var on END-FOR.")
   
   (binding in
     "Iterates over a list, binding the current list element to the var every time.
