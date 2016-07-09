@@ -157,7 +157,6 @@
   (values NIL
           form))
 
-;; Aliases
 (define-alias-binding repeat repeating)
 (define-alias-binding collect collecting)
 (define-alias-binding append appending)
@@ -167,5 +166,3 @@
 (define-alias-binding sum summing)
 (define-alias-binding maximize maximizing)
 (define-alias-binding minimize minimizing)
-
-;; FIXME: Figure out how to control the return value of the loop.
