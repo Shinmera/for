@@ -19,6 +19,18 @@
   (clause name)
   (remhash name *clauses*))
 
+(defmethod documentation ((name symbol) (type (eql 'clause)))
+  (documentation (clause name) type))
+
+(defmethod documentation ((func function) (type (eql 'clause)))
+  (documentation func T))
+
+(defmethod (setf documentation) (docstring (name symbol) (type (eql 'clause)))
+  (setf (documentation (clause name) type) docstring))
+
+(defmethod (setf documentation) (docstring (func function) (type (eql 'clause)))
+  (setf (documentation func T) docstring))
+
 (defmacro define-direct-clause (name args &body body)
   `(progn (setf (clause ',name)
                 (lambda ,args

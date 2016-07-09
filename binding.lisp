@@ -20,6 +20,18 @@
   (binding name)
   (remhash name *bindings*))
 
+(defmethod documentation ((name symbol) (type (eql 'binding)))
+  (documentation (binding name) type))
+
+(defmethod documentation ((func function) (type (eql 'binding)))
+  (documentation func T))
+
+(defmethod (setf documentation) (docstring (name symbol) (type (eql 'binding)))
+  (setf (documentation (binding name) type) docstring))
+
+(defmethod (setf documentation) (docstring (func function) (type (eql 'binding)))
+  (setf (documentation func T) docstring))
+
 (defmacro define-alias-binding (name referenced-binding-name)
   `(progn (setf (binding ',name) ',referenced-binding-name)
           ',name))
