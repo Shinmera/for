@@ -248,7 +248,11 @@ See WITH-FOR-BLOCK")
   (function for
     "Loops the body with the given bindings established.
 
-Each binding should have the form (variable/destructuring-list binding-type args*)
+Each binding should have the form (var binding-type args*)
+
+Sometimes a var can be either a single symbol denoting a variable, or a
+destructuring- lambda-list to which the result is destructured and bound via UPDATE.
+The support thereof depends on the binding construct.
 
 Within the body, special iteration clauses may be present. A clause must appear
 at the \"top-level\" of the body and cannot appear as a macro-expansion.
@@ -261,6 +265,7 @@ order of the binding expressions.
 
 The loop may also be terminated abnormally by a direct call to RETURN-FOR or RETURN.
 
+See UPDATE
 See BINDING
 See CLAUSE
 See END-FOR
