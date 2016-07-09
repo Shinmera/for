@@ -51,13 +51,38 @@
   (etypecase place
     (symbol `(setf ,place ,value-form))
     (list
-     (let* ((vars (lambda-fiddle:extract-all-lambda-vars place))
-            (gens (loop for var in vars collect (gensym (string var))))
-            (replaced (replace-lambda-vars place vars gens)))
-       `(destructuring-bind ,replaced ,value-form
-          ,@(loop for var in vars
-                  for gen in gens
-                  collect `(setf ,var ,gen)))))))
+     (let ((result (gensym "RESULT"))
+           (var (gensym "VAR")))
+       (lambda-fiddle:with-destructured-lambda-list (:required req :optional opt :rest rest :body body :key key) place
+         (let ((rest (or rest body)))
+           `(let ((,result ,value-form))
+              ;; Convert required into test and POP
+              ,@(loop for var in req
+                      do (assert (and (not (null var)) (symbolp var)))
+                      collect `(if ,result
+                                   (setf ,var (pop ,result))
+                                   (error "Not enough arguments to satisfy lambda-list ~a." ',place)))
+              ;; Convert &OPTIONAL into POP and default.
+              ,@(loop for o in opt
+                      for (var default) = (enlist o)
+                      do (assert (and (not (null var)) (symbolp var)))
+                      collect `(setf ,var (or (pop ,result) ,default)))
+              ;; If we don't have &REST or &KEY, error if there are some elements left.
+              ,@(when (and (not rest) (not (find '&key place)))
+                  `((when ,result (error "Too many elements supplied to satisfy lambda-list ~a." ',place))))
+              ;; Convert &REST by just setting it to the remainder.
+              ,@(when rest `((setf ,rest ,result)))
+              ;; Convert &KEY into GETF and default.
+              ,@(loop for k in key
+                      for (var default) = (enlist k)
+                      do (assert (and (not (null var)) (symbolp var)))
+                      collect `(setf ,var (or (getf ,result ,(intern (string var) :keyword)) ,default)))
+              ;; If we have a non-empty &KEY list and don't have &ALLOW-OTHER-KEYS, check the keys.
+              ,@(when (and key (not (find '&allow-other-keys place)))
+                  `((loop for ,var in ,result by #'cddr
+                          do (unless (find ,var ',(loop for k in key collect (intern (string k) :keyword)))
+                               (error "Keyword argument ~s not found in lambda-list ~a."
+                                      ,var ',place))))))))))))
 
 (defun hash-table-iterator (table)
   (with-hash-table-iterator (it table)
