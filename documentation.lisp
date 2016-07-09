@@ -587,7 +587,10 @@ As soon as FORM returns non-NIL the for is aborted with END-FOR and the non-NIL 
     "When FORM returns non-NIL, END-FOR is called.")
   
   (clause returning
-    "Does nothing each step, but makes sure to evaluate and return the value of FORM on END-FOR."))
+    "Does nothing each step, but makes sure to evaluate and return the value of FORM on END-FOR.")
+
+  (clause repeat
+    "Makes sure the loop body is repeated a maximum of N times."))
 
 ;; toolkit.lisp
 (docs:define-docs

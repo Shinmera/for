@@ -165,6 +165,15 @@
   (values NIL
           form))
 
+(define-direct-clause repeat (n)
+  (let ((limit (gensym "LIMIT"))
+        (counter (gensym "COUNTER")))
+    (values
+     `(let ((,limit ,n)
+            (,counter 0)))
+     `(when (<= ,limit (incf ,counter))
+        (end-for)))))
+
 (define-alias-binding update updating)
 (define-alias-binding repeat repeating)
 (define-alias-binding collect collecting)
