@@ -6,16 +6,17 @@
 
 (in-package #:org.shirakumo.for)
 
-(defmacro with-for-tagbody (() &body body)
+(defmacro with-for-tagbody (body &body exit)
   (let ((for-start (gensym "FOR-START"))
         (for-end (gensym "FOR-END")))
-    `(tagbody
-        ,for-start
-        (macrolet ((end-for () `(go ,',for-end))
-                   (skip-for () `(go ,',for-start)))
-          ,@body
-          (go ,for-start))
-        ,for-end)))
+    `(macrolet ((end-for () `(go ,',for-end))
+                (skip-for () `(go ,',for-start)))
+       (tagbody
+          ,for-start
+          ,body
+          (go ,for-start)
+          ,for-end
+          (progn ,@exit)))))
 
 (defmacro with-for-block (() &body body)
   `(block NIL
@@ -23,11 +24,14 @@
        ,@body)))
 
 (defmacro for (bindings &body body)
-  (multiple-value-bind (surrounding forms) (convert-bindings bindings)
-    `(with-interleaving
-       ,@surrounding
-       (with-for-block ()
-         (with-for-tagbody ()
-           ,@forms
-           (with-clauses ()
-             ,@body))))))
+  (multiple-value-bind (bind-init bind-forms bind-exit) (convert-bindings bindings)
+    (multiple-value-bind (clause-init body-forms clause-exit) (convert-clauses body)
+      `(with-interleaving
+         ,@bind-init
+         ,@clause-init
+         (with-for-block ()
+           (with-for-tagbody
+               (progn ,@bind-forms
+                      ,@body-forms)
+             ,@bind-exit
+             ,@clause-exit))))))

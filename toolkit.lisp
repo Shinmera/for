@@ -6,6 +6,13 @@
 
 (in-package #:org.shirakumo.for)
 
+(defmacro values* (&rest values)
+  `(values-list
+    (list*
+     ,@(butlast values)
+     (multiple-value-list
+      ,(car (last values))))))
+
 (defun enlist (a &rest els)
   (if (listp a)
       a

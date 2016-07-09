@@ -19,15 +19,25 @@
   (clause name)
   (remhash name *clauses*))
 
-(defmacro define-clause (name args &body body)
+(defmacro define-direct-clause (name args &body body)
   `(progn (setf (clause ',name)
-                '(,name ,args ,@body))
+                (lambda ,args
+                  ,@body))
           ',name))
 
-(defun clause-forms ()
-  (loop for form being the hash-values of *clauses*
-        collect form))
+(defmacro define-simple-clause (name args &body body)
+  `(define-direct-clause ,name ,args
+     (values NIL (progn ,@body) NIL)))
 
-(defmacro with-clauses (() &body body)
-  `(macrolet ,(clause-forms)
-     ,@body))
+(defun convert-clauses (forms)
+  (loop for form in forms
+        for clause = (when (consp form) (ignore-errors (clause (first form))))
+        for (init forms exit) = (if clause
+                                    (multiple-value-list (apply clause (rest form)))
+                                    (list NIL form NIL))
+        collect init into all-init
+        collect forms into all-forms
+        collect exit into all-exit
+        finally (return (values (remove NIL all-init)
+                                (remove NIL all-forms)
+                                (remove NIL all-exit)))))

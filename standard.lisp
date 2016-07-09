@@ -87,11 +87,11 @@
 (define-form-binding = (var form)
   `(update ,var ,form))
 
-(define-form-binding collecting (var form &aux (head (cons NIL NIL)) (tail head))
+(define-accumulation-binding collecting (var form &aux (head (cons NIL NIL)) (tail head))
   `(setf ,tail (setf (cdr ,tail) (cons ,form NIL))
          ,var (cdr ,head)))
 
-(define-form-binding appending (var form &aux (head (cons NIL NIL)) (tail head))
+(define-accumulation-binding appending (var form &aux (head (cons NIL NIL)) (tail head))
   (let ((result (gensym "RESULT"))
         (new-tail (gensym "NEW-TAIL")))
     `(let ((,result ,form))
@@ -101,7 +101,7 @@
                  ,tail ,new-tail))
          (setf ,var (cdr ,head))))))
 
-(define-form-binding nconcing (var form &aux (head (cons NIL NIL)) (tail head))
+(define-accumulation-binding nconcing (var form &aux (head (cons NIL NIL)) (tail head))
   (let ((result (gensym "RESULT")))
     `(let ((,result ,form))
        (when ,result
@@ -111,43 +111,49 @@
 
 (defvar *unbound* (gensym "UNBOUND"))
 
-(define-form-binding reducing ((var *unbound*) form &key by)
+(define-accumulation-binding reducing ((var *unbound*) form &key by)
   `(cond ((eq ,var *unbound*)
           (setf ,var ,form))
          (T
           (setf ,var (funcall ,by ,var ,form)))))
 
-(define-form-binding counting ((var 0) form)
+(define-accumulation-binding counting ((var 0) form)
   `(when ,form (incf ,var)))
 
-(define-form-binding summing ((var 0) form)
+(define-accumulation-binding summing ((var 0) form)
   `(incf ,var ,form))
 
-(define-form-binding maximizing (var form)
+(define-accumulation-binding maximizing (var form)
   (let ((result (gensym "RESULT")))
     `(let ((,result ,form))
        (when (or (not ,var) (< ,var ,result))
          (setf ,var ,result)))))
 
-(define-form-binding minimizing (var form)
+(define-accumulation-binding minimizing (var form)
   (let ((result (gensym "RESULT")))
     `(let ((,result ,form))
        (when (or (not ,var) (< ,result ,var))
          (setf ,var ,result)))))
 
-(define-clause always (form)
-  `(unless ,form (return-for NIL)))
+(define-direct-clause always (form)
+  (values NIL
+          `(unless ,form (return-for NIL))
+          `(return-for T)))
 
-(define-clause never (form)
-  `(when ,form (return-for NIL)))
+(define-direct-clause never (form)
+  (values NIL
+          `(when ,form (return-for NIL))
+          `(return-for T)))
 
-(define-clause thereis (form)
-  `(when ,form (return-for T)))
+(define-direct-clause thereis (form)
+  (values NIL
+          `(when ,form (return-for T))
+          `(return-for NIL)))
 
-(define-clause while (form)
+(define-simple-clause while (form)
   `(unless ,form (end-for)))
 
-(define-clause until (form)
+(define-simple-clause until (form)
   `(when ,form (end-for)))
 
 ;; Aliases
