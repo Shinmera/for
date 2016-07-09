@@ -116,7 +116,7 @@
 (defclass random-iterator (iterator)
   ((limit :initarg :limit :reader limit))
   (:default-initargs
-   :object (make-random-state)
+   :object (make-random-state T)
    :limit 1.0f0))
 
 (defmethod has-more ((iterator random-iterator))
