@@ -135,17 +135,17 @@
        (when (or (not ,var) (< ,result ,var))
          (setf ,var ,result)))))
 
-(define-simple-clause always (form)
-  (values `(unless ,form (return-for NIL))
-          `(return-for T)))
+(define-simple-clause always (form &aux (result T))
+  (values `(unless ,form (setf ,result NIL) (end-for))
+          result))
 
-(define-simple-clause never (form)
-  (values `(when ,form (return-for NIL))
-          `(return-for T)))
+(define-simple-clause never (form &aux (result T))
+  (values `(when ,form (setf ,result NIL) (end-for))
+          result))
 
-(define-simple-clause thereis (form)
-  (values `(when ,form (return-for T))
-          `(return-for NIL)))
+(define-simple-clause thereis (form &aux (result NIL))
+  (values `(when ,form (setf ,result T) (end-for))
+          result))
 
 (define-simple-clause while (form)
   `(unless ,form (end-for)))
