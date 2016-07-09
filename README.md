@@ -95,12 +95,105 @@ The following clauses are included in the `for-minimal` package:
 * `until`
 * `while`
 
-## Extending FOR
-### Iterators
+Note that clauses must appear as a "top-level" form within the `for` body and cannot appear as the result of a macroexpansion.
 
+## Extending FOR
+Both bindings and clauses are defined in terms of functions that return three values:
+
+1. A surrounding form
+   Surrounding forms will be wrapped around the rest of the expanded for by appending the rest to it. This happens through `with-interleaving`.
+2. A loop body form
+   The body form is put inside the loop where it will be evaluated once per iteration.
+3. A return value form
+   The return value form is evaluated on loop end. The position within the returned values is dependent on the clauses and bindings present during expansion. If not provided, no return value is generated. Note that this is distinct from having NIL as a third value.
+
+Passed to the functions are the literal arguments used in the binding or clause expression. In that way, a clause/binding function must work just like a macro would.
 
 ### Bindings
+The most primitive way to define bindings is through the `define-direct-binding` macro. This defines a verbatim binding function as described above. Note that the loop body forms of bindings will always be evaluated before the proper for body. 
 
+In most cases you will want the arguments that are passed to the binding to be evaluated only once, before the loop starts properly. The `define-value-binding` macro will help you with that. Each argument you specify will be bound to a gensym within the definition body, and is automatically expanded to a variable with the value that is used in the binding. `&aux` arguments receive special treatment as they are expanded like regular variables and thus allow you to easily define helper variables necessary during iteration.
+
+Let's look at an example binding definition:
+
+    (define-value-binding across (var vector &aux (i -1) (length (length vector)))
+      `(if (= ,length (incf ,i))
+           (end-for)
+           (update ,var (aref ,vector ,i))))
+
+Expanding a simple call `(for ((a across vec)))` results in this expansion (after cleaning it up a little):
+
+    (LET* ((#:VECTOR VEC)
+           (#:I -1)
+           (#:LENGTH (LENGTH #:VECTOR))
+           (A NIL))
+      (WITH-FOR-BODY
+        (IF (= #:LENGTH (INCF #:I))
+            (END-FOR)
+            (UPDATE A (AREF #:VECTOR #:I))))
+
+As you can see, our only argument, `vector` got expanded into a gensym-ed variable that is bound to the result of the `vector` argument. Our auxiliary variables received similar treatment. Note that references to other arguments automatically get translated to their proper gensyms.
+
+In some cases however you'd like to re-evaluate an argument each iteration. To get this behaviour, you can use `define-form-binding`. Here's a simple example:
+
+     (define-form-binding = (var form)
+       `(update ,var ,form))
+
+Expanding a simple call `(for ((a = (* 2 2))))` presents us with:
+
+     (LET* ((A NIL))
+       (WITH-FOR-BODY
+         (UPDATE A (* 2 2)))
+
+Usually you will want form bindings if you want to accumulate the results of it over time in some manner. In that case you usually also want to return the result of the accumulation once you're done. `define-accumulation-binding` does exactly that. One note about form bindings is that the auxiliary variables still act the same as in the value bindings-- they automatically get expanded to bindings in the resulting loop construct.
+
+Let's look at an example that shows both:
+
+    (define-accumulation-binding collecting (var form &aux (head (cons NIL NIL)) (tail head))
+      `(setf ,tail (setf (cdr ,tail) (cons ,form NIL))
+             ,var (cdr ,head)))
+
+Expanding `(for ((a collecting 2)))` results in:
+
+    (LET* ((#:HEAD (CONS NIL NIL)) (#:TAIL #:HEAD) (A NIL))
+      (WITH-FOR-BODY
+       (SETF #:TAIL (SETF (CDR #:TAIL) (CONS 2 NIL))
+             A (CDR #:HEAD))
+       (RETURN-FOR A))
+
+As before, the auxiliary arguments got expanded to variable bindings with their respective default values.
+
+Finally we have two variants of form and value bindings, `define-form-symbol-macro-binding` and `define-value-symbol-macro-binding`. The difference to the previous definition forms here is that the `var` is not bound as a variable, but instead as a symbol macro. Its default value is the symbol-macro expansion. This is useful if you want to provide an updateable place as the iteration var, as is the case with the `updating` binding.
 
 ### Clauses
+Clauses work the exact same as bindings in terms of the base function, which you can define with `define-direct-clause`. Unlike bindings however, clauses simply get the body of their call as arguments, without an iteration var.
 
+In order to ease things a bit there is also `define-simple-clause` which provides the same handling for arguments as `define-form-binding` does.
+
+One thing to note is that the surrounding forms of clauses always appear deeper than those of bindings and that the result value forms of clauses always appear before those of bindings. The loop body form of a clause appears at the exact position in the body where the clause expression previously appeared.
+
+### Iterators
+In order to provide the generic `over` iteration construct, For includes a protocol to define iterators. In order for an iterator to work, it has to subclass `iterator` and provide three methods: `make-iterator`, `has-more`, and `next`. The first is merely there so that we can dispatch on the type of object we'd like to iterate over and construct an appropriate iterator for it. The second should return a generalised boolean that tells us whether we can safely call `next`. Finally, `next` itself advances the iterator and returns a new element. If sensible and possible, a method on `(setf current)` can also be provided to allow updating the current element to a new value.
+
+Let's look at the list iterator as an example:
+
+    (defclass list-iterator (iterator)
+      ())
+    
+    (defmethod initialize-instance :after ((iterator list-iterator) &key object)
+      (setf (object iterator) (cons NIL object)))
+    
+    (defmethod has-more ((iterator list-iterator))
+      (cdr (object iterator)))
+    
+    (defmethod next ((iterator list-iterator))
+      (setf (object iterator) (cdr (object iterator)))
+      (car (object iterator)))
+    
+    (defmethod (setf current) (value (iterator list-iterator))
+      (setf (car (object iterator)) value))
+    
+    (defmethod make-iterator ((list list) &key)
+      (make-instance 'list-iterator :object list))
+
+First we subclass `iterator`. Next we define an initialize method in order to prepend a cons to the list. We do this so that we know the next element will always be in the cadr of the `object` and we can still set the car of the current cons cell to update it. The `has-more` test is implemented accordingly. On `next` we then simply pop off the first cons and return our new current element. The `(setf current)` can then just update the car of the `object`. Finally we need a `make-iterator` method to dispatch on lists.
