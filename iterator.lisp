@@ -107,8 +107,8 @@
 (defclass directory-iterator (list-iterator)
   ())
 
-(defmethod initialize-instance :after ((iterator directory-iterator) &key pathname)
-  (setf (object iterator) (cons NIL (directory pathname))))
+(defmethod initialize-instance :after ((iterator directory-iterator) &key object)
+  (setf (object iterator) (cons NIL (directory object))))
 
 (defmethod make-iterator ((pathname pathname) &key)
   (make-instance 'directory-iterator :object pathname))
