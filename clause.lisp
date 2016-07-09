@@ -30,14 +30,10 @@
      (values* NIL (progn ,@body))))
 
 (defun convert-clauses (forms)
-  (loop for form in forms
-        for clause = (when (consp form) (ignore-errors (clause (first form))))
-        for (init forms exit) = (if clause
-                                    (multiple-value-list (apply clause (rest form)))
-                                    (list NIL form NIL))
-        collect init into all-init
-        collect forms into all-forms
-        collect exit into all-exit
-        finally (return (values (remove NIL all-init)
-                                (remove NIL all-forms)
-                                (remove NIL all-exit)))))
+  (collect-for-values
+   forms
+   (lambda (form)
+     (let ((clause (when (consp form) (ignore-errors (clause (first form))))))
+       (if clause
+           (multiple-value-list (apply clause (rest form)))
+           (list NIL form))))))

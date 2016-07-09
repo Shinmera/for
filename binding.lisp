@@ -123,11 +123,8 @@
                       ,@body)))))))
 
 (defun convert-bindings (bindings)
-  (loop for (var type . args) in bindings
-        for (init forms exit) = (multiple-value-list (apply (binding type) var args))
-        collect init into all-init
-        collect forms into all-forms
-        collect exit into all-exit
-        finally (return (values (remove NIL all-init)
-                                (remove NIL all-forms)
-                                (remove NIL all-exit)))))
+  (collect-for-values
+   bindings
+   (lambda (binding)
+     (destructuring-bind (var type &rest args) binding
+       (multiple-value-list (apply (binding type) var args))))))

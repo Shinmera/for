@@ -77,3 +77,11 @@
           (emit-it :external)
           (emit-it :inherited)
           (error "At least one of :INTERNAL :EXTERNAL :INHERITED required for package iteration.")))))
+
+(defun collect-for-values (expressions function)
+  (loop for expr in expressions
+        for values = (funcall function expr)
+        when (first values) collect (first values) into all-init
+        when (second values) collect (second values) into all-forms
+        when (cddr values) collect (third values) into all-exit
+        finally (return (values all-init all-forms all-exit))))
