@@ -116,7 +116,6 @@
 (defclass random-iterator (iterator)
   ((limit :initarg :limit :reader limit))
   (:default-initargs
-   :object (make-random-state T)
    :limit 1.0f0))
 
 (defmethod has-more ((iterator random-iterator))
@@ -127,9 +126,6 @@
 
 (defmethod make-iterator ((random-state random-state) &key (limit 1.0))
   (make-instance 'random-iterator :object random-state :limit limit))
-
-(defmethod make-iterator ((symbol (eql :random)) &key (limit 1.0))
-  (make-instance 'random-iterator :limit limit))
 
 (defclass package-iterator (iterator)
   ((prefetch :initform NIL :accessor prefetch))

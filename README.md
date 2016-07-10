@@ -29,13 +29,13 @@ You might realise that the above is a rather inefficient way of writing the loop
 
 If we have multiple bindings or clauses that might have useful values to return, all of them are returned:
 
-    (for:for ((a over :random :limit 10)
+    (for:for ((a over *random-state* :limit 10)
               (b collect a))
       (thereis (evenp a)))
       
 In order for short-circuiting clauses to have highest priority on values, clause-values are always returned first followed by binding values. Otherwise the order follows the declaration order of the respective clauses/bindings.
 
-For also features a generic iterator construct that allows you to iterate over a multitude of different data types without having to do a case-distinction by yourself. We already saw this with the `over :random` binding from the previous example.
+For also features a generic iterator construct that allows you to iterate over a multitude of different data types without having to do a case-distinction by yourself. We already saw this with the `over *random-state*` binding from the previous example.
 
     (for:for ((a over '(1 2 3))
               (b over #(a b c))

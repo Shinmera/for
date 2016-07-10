@@ -390,9 +390,8 @@ See LIST-ITERATOR")
   (type random-iterator
     "Iterator for random numbers.
 
-This iterator can be constructed through either a RANDOM-STATE object or through the
-:RANDOM keyword as an object. The argument for RANDOM that determines its limit can be
-passed through the :LIMIT initarg.
+This iterator can be constructed through a RANDOM-STATE object. The argument for RANDOM
+that determines its limit can be passed through the :LIMIT initarg.
 
 See ITERATOR")
 
