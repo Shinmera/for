@@ -341,6 +341,8 @@ See ITERATOR")
   (type array-iterator
     "Iterator for general arrays.
 
+Iteration is in row-major order.
+
 Supports setting the current element.
 
 See VECTOR-ITERATOR
@@ -383,7 +385,8 @@ See STREAM-ITERATOR")
     "Iterator for a DIRECTORY listing.
 
 On construction, this performs a simple DIRECTORY call on the given object
-and then iterates over the result list of pathnames.
+and then iterates over the result list of pathnames. Thus, the pathname must
+be wild.
 
 See LIST-ITERATOR")
 
