@@ -61,6 +61,8 @@ Some of the bindings also support destructuring the current item by a destructur
       
 You can check a binding's or clause's documentation with `(documentation 'in 'for:binding)` which will tell you whether it supports destructuring through `update`.
 
+Note that clauses must appear as a "top-level" form within the `for` body and cannot appear as the result of a macroexpansion.
+
 The following bindings are included in the `for-minimal` package:
 
 * `=`
@@ -95,7 +97,16 @@ The following clauses are included in the `for-minimal` package:
 * `until`
 * `while`
 
-Note that clauses must appear as a "top-level" form within the `for` body and cannot appear as the result of a macroexpansion.
+Iterator classes for the following types is included in the `for-iterator` package:
+
+* `list`
+* `vector`
+* `array`
+* `stream`
+* `pathname` -- must be a wild pathname
+* `random-state`
+* `package`
+* `hash-table` each item is a list of key and value.
 
 ## Extending FOR
 Both bindings and clauses are defined in terms of functions that return three values:
