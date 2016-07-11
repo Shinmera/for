@@ -64,14 +64,14 @@
 
 <p>If we have multiple bindings or clauses that might have useful values to return, all of them are returned:</p>
 
-<pre><code>(<a href="#FOR:FOR">for:for</a> ((a over :random :limit 10)
+<pre><code>(<a href="#FOR:FOR">for:for</a> ((a over *random-state* :limit 10)
           (b collect a))
   (<a href="#FOR:THEREIS">thereis</a> (<a href="http://l1sp.org/cl/evenp">evenp</a> a)))
 </code></pre>
 
 <p>In order for short-circuiting clauses to have highest priority on values, clause-values are always returned first followed by binding values. Otherwise the order follows the declaration order of the respective clauses/bindings.</p>
 
-<p>For also features a generic iterator construct that allows you to iterate over a multitude of different data types without having to do a case-distinction by yourself. We already saw this with the <code>over :random</code> binding from the previous example.</p>
+<p>For also features a generic iterator construct that allows you to iterate over a multitude of different data types without having to do a case-distinction by yourself. We already saw this with the <code>over *random-state*</code> binding from the previous example.</p>
 
 <pre><code>(<a href="#FOR:FOR">for:for</a> ((a over '(1 2 3))
           (b over #(a b c))
@@ -99,6 +99,8 @@
 </code></pre>
 
 <p>You can check a binding's or clause's documentation with <code>(<a href="http://l1sp.org/cl/documentation">documentation</a> 'in 'for:binding)</code> which will tell you whether it supports destructuring through <code><a href="#FOR:UPDATE">update</a></code>.</p>
+
+<p>Note that clauses must appear as a &quot;top-level&quot; form within the <code><a href="#FOR:FOR">for</a></code> body and cannot appear as the result of a macroexpansion.</p>
 
 <p>The following bindings are included in the <code>for-minimal</code> package:</p>
 
@@ -138,7 +140,18 @@
 <li><code><a href="#FOR:WHILE">while</a></code></li>
 </ul>
 
-<p>Note that clauses must appear as a &quot;top-level&quot; form within the <code><a href="#FOR:FOR">for</a></code> body and cannot appear as the result of a macroexpansion.</p>
+<p>Iterator classes for the following types is included in the <code>for-iterator</code> package:</p>
+
+<ul>
+<li><code><a href="http://l1sp.org/cl/list">list</a></code></li>
+<li><code><a href="http://l1sp.org/cl/vector">vector</a></code></li>
+<li><code><a href="http://l1sp.org/cl/array">array</a></code></li>
+<li><code><a href="http://l1sp.org/cl/stream">stream</a></code></li>
+<li><code><a href="http://l1sp.org/cl/pathname">pathname</a></code> -- must be a wild pathname</li>
+<li><code><a href="http://l1sp.org/cl/random-state">random-state</a></code></li>
+<li><code><a href="http://l1sp.org/cl/package">package</a></code></li>
+<li><code><a href="http://l1sp.org/cl/hash-table">hash-table</a></code> each item is a list of key and value.</li>
+</ul>
 
 <h2>Extending FOR</h2>
 
@@ -228,31 +241,31 @@
 
 <h3>Iterators</h3>
 
-<p>In order to provide the generic <code><a href="#FOR:OVER">over</a></code> iteration construct, For includes a protocol to define iterators. In order for an iterator to work, it has to subclass <code><a href="#FOR-ITERATOR:ITERATOR">iterator</a></code> and provide three methods: <code><a href="#FOR-ITERATOR:MAKE-ITERATOR">make-iterator</a></code>, <code><a href="#FOR-ITERATOR:HAS-MORE">has-more</a></code>, and <code><a href="#FOR-ITERATOR:NEXT">next</a></code>. The first is merely there so that we can dispatch on the type of object we'd like to iterate over and construct an appropriate iterator for it. The second should return a generalised boolean that tells us whether we can safely call <code><a href="#FOR-ITERATOR:NEXT">next</a></code>. Finally, <code><a href="#FOR-ITERATOR:NEXT">next</a></code> itself advances the iterator and returns a new element. If sensible and possible, a method on <code>(<a href="http://l1sp.org/cl/setf">setf</a> current)</code> can also be provided to allow updating the current element to a new value.</p>
+<p>In order to provide the generic <code><a href="#FOR:OVER">over</a></code> iteration construct, For includes a protocol to define iterators. In order for an iterator to work, it has to subclass <code><a href="#FOR:ITERATOR">iterator</a></code> and provide three methods: <code><a href="#FOR:MAKE-ITERATOR">make-iterator</a></code>, <code><a href="#FOR:HAS-MORE">has-more</a></code>, and <code><a href="#FOR:NEXT">next</a></code>. The first is merely there so that we can dispatch on the type of object we'd like to iterate over and construct an appropriate iterator for it. The second should return a generalised boolean that tells us whether we can safely call <code><a href="#FOR:NEXT">next</a></code>. Finally, <code><a href="#FOR:NEXT">next</a></code> itself advances the iterator and returns a new element. If sensible and possible, a method on <code>(<a href="http://l1sp.org/cl/setf">setf</a> current)</code> can also be provided to allow updating the current element to a new value.</p>
 
 <p>Let's look at the list iterator as an example:</p>
 
-<pre><code>(<a href="http://l1sp.org/cl/defclass">defclass</a> list-iterator (<a href="#FOR-ITERATOR:ITERATOR">iterator</a>)
+<pre><code>(<a href="http://l1sp.org/cl/defclass">defclass</a> list-iterator (<a href="#FOR:ITERATOR">iterator</a>)
   ())
 
 (<a href="http://l1sp.org/cl/defmethod">defmethod</a> initialize-instance :after ((iterator list-iterator) &amp;key object)
-  (<a href="http://l1sp.org/cl/setf">setf</a> (<a href="#FOR-ITERATOR:OBJECT">object</a> iterator) (<a href="http://l1sp.org/cl/cons">cons</a> NIL object)))
+  (<a href="http://l1sp.org/cl/setf">setf</a> (<a href="#FOR:OBJECT">object</a> iterator) (<a href="http://l1sp.org/cl/cons">cons</a> NIL object)))
 
 (<a href="http://l1sp.org/cl/defmethod">defmethod</a> has-more ((iterator list-iterator))
-  (<a href="http://l1sp.org/cl/cdr">cdr</a> (<a href="#FOR-ITERATOR:OBJECT">object</a> iterator)))
+  (<a href="http://l1sp.org/cl/cdr">cdr</a> (<a href="#FOR:OBJECT">object</a> iterator)))
 
 (<a href="http://l1sp.org/cl/defmethod">defmethod</a> next ((iterator list-iterator))
-  (<a href="http://l1sp.org/cl/setf">setf</a> (<a href="#FOR-ITERATOR:OBJECT">object</a> iterator) (<a href="http://l1sp.org/cl/cdr">cdr</a> (<a href="#FOR-ITERATOR:OBJECT">object</a> iterator)))
-  (<a href="http://l1sp.org/cl/car">car</a> (<a href="#FOR-ITERATOR:OBJECT">object</a> iterator)))
+  (<a href="http://l1sp.org/cl/setf">setf</a> (<a href="#FOR:OBJECT">object</a> iterator) (<a href="http://l1sp.org/cl/cdr">cdr</a> (<a href="#FOR:OBJECT">object</a> iterator)))
+  (<a href="http://l1sp.org/cl/car">car</a> (<a href="#FOR:OBJECT">object</a> iterator)))
 
-(<a href="http://l1sp.org/cl/defmethod">defmethod</a> (<a href="http://l1sp.org/cl/setf">setf</a> current) (value (<a href="#FOR-ITERATOR:ITERATOR">iterator</a> list-iterator))
-  (<a href="http://l1sp.org/cl/setf">setf</a> (<a href="http://l1sp.org/cl/car">car</a> (<a href="#FOR-ITERATOR:OBJECT">object</a> iterator)) value))
+(<a href="http://l1sp.org/cl/defmethod">defmethod</a> (<a href="http://l1sp.org/cl/setf">setf</a> current) (value (<a href="#FOR:ITERATOR">iterator</a> list-iterator))
+  (<a href="http://l1sp.org/cl/setf">setf</a> (<a href="http://l1sp.org/cl/car">car</a> (<a href="#FOR:OBJECT">object</a> iterator)) value))
 
 (<a href="http://l1sp.org/cl/defmethod">defmethod</a> make-iterator ((list list) &amp;key)
   (<a href="http://l1sp.org/cl/make-instance">make-instance</a> 'list-iterator :object list))
 </code></pre>
 
-<p>First we subclass <code><a href="#FOR-ITERATOR:ITERATOR">iterator</a></code>. Next we define an initialize method in order to prepend a cons to the list. We do this so that we know the next element will always be in the cadr of the <code><a href="#FOR-ITERATOR:OBJECT">object</a></code> and we can still set the car of the current cons cell to update it. The <code><a href="#FOR-ITERATOR:HAS-MORE">has-more</a></code> test is implemented accordingly. On <code><a href="#FOR-ITERATOR:NEXT">next</a></code> we then simply pop off the first cons and return our new current element. The <code>(<a href="http://l1sp.org/cl/setf">setf</a> current)</code> can then just update the car of the <code><a href="#FOR-ITERATOR:OBJECT">object</a></code>. Finally we need a <code><a href="#FOR-ITERATOR:MAKE-ITERATOR">make-iterator</a></code> method to dispatch on lists.</p>
+<p>First we subclass <code><a href="#FOR:ITERATOR">iterator</a></code>. Next we define an initialize method in order to prepend a cons to the list. We do this so that we know the next element will always be in the cadr of the <code><a href="#FOR:OBJECT">object</a></code> and we can still set the car of the current cons cell to update it. The <code><a href="#FOR:HAS-MORE">has-more</a></code> test is implemented accordingly. On <code><a href="#FOR:NEXT">next</a></code> we then simply pop off the first cons and return our new current element. The <code>(<a href="http://l1sp.org/cl/setf">setf</a> current)</code> can then just update the car of the <code><a href="#FOR:OBJECT">object</a></code>. Finally we need a <code><a href="#FOR:MAKE-ITERATOR">make-iterator</a></code> method to dispatch on lists.</p>
 </span>
         
       </article>
@@ -276,6 +289,172 @@
                 <span class="nicknames">(ORG.SHIRAKUMO.FOR)</span>
               </h3>
               <ul><li>
+                  <a name="FOR:ARRAY-ITERATOR"/>
+                  <article>
+                    <header class="class">
+                      <span class="type">class</span>
+                      <code>
+                        <h4><a href="#FOR:ARRAY-ITERATOR" class="name">ARRAY-ITERATOR</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Iterator for general arrays.
+
+Iteration is in row-major order.
+
+Supports setting the current element.
+
+See VECTOR-ITERATOR
+See TOTAL-LENGTH</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:DIRECTORY-ITERATOR"/>
+                  <article>
+                    <header class="class">
+                      <span class="type">class</span>
+                      <code>
+                        <h4><a href="#FOR:DIRECTORY-ITERATOR" class="name">DIRECTORY-ITERATOR</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Iterator for a DIRECTORY listing.
+
+On construction, this performs a simple DIRECTORY call on the given object
+and then iterates over the result list of pathnames. Thus, the pathname must
+be wild.
+
+See LIST-ITERATOR</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:HASH-TABLE-ITERATOR"/>
+                  <article>
+                    <header class="class">
+                      <span class="type">class</span>
+                      <code>
+                        <h4><a href="#FOR:HASH-TABLE-ITERATOR" class="name">HASH-TABLE-ITERATOR</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring"/>
+                  </article>
+                </li><li>
+                  <a name="FOR:ITERATOR"/>
+                  <article>
+                    <header class="class">
+                      <span class="type">class</span>
+                      <code>
+                        <h4><a href="#FOR:ITERATOR" class="name">ITERATOR</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">An iterator is responsible for iterating over a given data structure.
+
+See HAS-MORE
+See NEXT
+See CURRENT
+See MAKE-ITERATOR
+See OBJECT</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:LIST-ITERATOR"/>
+                  <article>
+                    <header class="class">
+                      <span class="type">class</span>
+                      <code>
+                        <h4><a href="#FOR:LIST-ITERATOR" class="name">LIST-ITERATOR</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Iterator for proper lists.
+
+Supports setting the current element.
+
+See ITERATOR</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:PACKAGE-ITERATOR"/>
+                  <article>
+                    <header class="class">
+                      <span class="type">class</span>
+                      <code>
+                        <h4><a href="#FOR:PACKAGE-ITERATOR" class="name">PACKAGE-ITERATOR</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Iterator for the symbols in a package.
+
+The type of symbols that are iterated can be set through the :STATUS initarg, which must
+be a list containing any of the following keywords: :INTERNAL :EXTERNAL :INHERITED
+
+See PREFETCH
+See ITERATOR</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:RANDOM-ITERATOR"/>
+                  <article>
+                    <header class="class">
+                      <span class="type">class</span>
+                      <code>
+                        <h4><a href="#FOR:RANDOM-ITERATOR" class="name">RANDOM-ITERATOR</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Iterator for random numbers.
+
+This iterator can be constructed through a RANDOM-STATE object. The argument for RANDOM
+that determines its limit can be passed through the :LIMIT initarg.
+
+See ITERATOR</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:STREAM-ITERATOR"/>
+                  <article>
+                    <header class="class">
+                      <span class="type">class</span>
+                      <code>
+                        <h4><a href="#FOR:STREAM-ITERATOR" class="name">STREAM-ITERATOR</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Iterator for input streams.
+
+The stream is read through a buffer, the size of which can be set via the :BUFFER-SIZE
+initarg.
+
+Supports setting the &quot;current&quot; element if the stream supports writing to it of course.
+
+See BUFFER
+See INDEX
+See LIMIT
+See ITERATOR</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:VECTOR-ITERATOR"/>
+                  <article>
+                    <header class="class">
+                      <span class="type">class</span>
+                      <code>
+                        <h4><a href="#FOR:VECTOR-ITERATOR" class="name">VECTOR-ITERATOR</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Iterator for vectors.
+
+Supports setting the current element.
+
+See START
+See ITERATOR</pre>
+                  </article>
+                </li><li>
                   <a name="FOR:BINDING"/>
                   <article>
                     <header class="accessor">
@@ -294,6 +473,21 @@ performed using the symbol with the same symbol-name from the FOR package.
 See REMOVE-BINDING</pre>
                   </article>
                 </li><li>
+                  <a name="FOR:BUFFER"/>
+                  <article>
+                    <header class="accessor">
+                      <span class="type">accessor</span>
+                      <code>
+                        <h4><a href="#FOR:BUFFER" class="name">BUFFER</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(OBJECT)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Accessor to the stream-iterator's buffer.
+
+See STREAM-ITERATOR</pre>
+                  </article>
+                </li><li>
                   <a name="FOR:CLAUSE"/>
                   <article>
                     <header class="accessor">
@@ -310,6 +504,120 @@ If there is no clause named by the given symbol directly, another search is
 performed using the symbol with the same symbol-name from the FOR package.
 
 See REMOVE-CLAUSE</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:CURRENT"/>
+                  <article>
+                    <header class="accessor">
+                      <span class="type">accessor</span>
+                      <code>
+                        <h4><a href="#FOR:CURRENT" class="name">CURRENT</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(ITERATOR)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Accessor to the current item of the iterator.
+
+The behaviour is undefined if CURRENT is used before NEXT has been called for a first time.
+Some (but not all) iterators may support setting the current element to a new value.
+
+See NEXT</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:INDEX"/>
+                  <article>
+                    <header class="accessor">
+                      <span class="type">accessor</span>
+                      <code>
+                        <h4><a href="#FOR:INDEX" class="name">INDEX</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(OBJECT)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Accessor to the current index within the buffer.
+
+See STREAM-ITERATOR</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:LIMIT"/>
+                  <article>
+                    <header class="accessor">
+                      <span class="type">accessor</span>
+                      <code>
+                        <h4><a href="#FOR:LIMIT" class="name">LIMIT</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(OBJECT)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Accessor to the amount of data that is currently filled in the buffer.
+
+See STREAM-ITERATOR</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:OBJECT"/>
+                  <article>
+                    <header class="accessor">
+                      <span class="type">accessor</span>
+                      <code>
+                        <h4><a href="#FOR:OBJECT" class="name">OBJECT</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(OBJECT)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Accessor to the data structure the iterator is iterating over.
+
+Note that this is not necessarily the same object as what was passed into the
+constructor of the iterator. The iterator is free to modify this slot as it sees fit.
+
+See ITERATOR</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:PREFETCH"/>
+                  <article>
+                    <header class="accessor">
+                      <span class="type">accessor</span>
+                      <code>
+                        <h4><a href="#FOR:PREFETCH" class="name">PREFETCH</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(OBJECT)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Cache for the next value
+
+Since the iterator constructs provided by CL do not allow merely testing whether a next
+element is available without losing it if there is one, we must cache the value on a
+HAS-MORE call and then use that on NEXT instead of calling the iterator function twice.
+
+See PACKAGE-ITERATOR
+See HASH-TABLE-ITERATOR</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:START"/>
+                  <article>
+                    <header class="accessor">
+                      <span class="type">accessor</span>
+                      <code>
+                        <h4><a href="#FOR:START" class="name">START</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(OBJECT)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Accessor to the index that points to the next element of the vector-iterator.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:TOTAL-LENGTH"/>
+                  <article>
+                    <header class="accessor">
+                      <span class="type">accessor</span>
+                      <code>
+                        <h4><a href="#FOR:TOTAL-LENGTH" class="name">TOTAL-LENGTH</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(OBJECT)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Slot holding the array-total-size.
+
+See ARRAY-ITERATOR</pre>
                   </article>
                 </li><li>
                   <a name="FOR:="/>
@@ -353,6 +661,21 @@ See REMOVE-CLAUSE</pre>
    which defaults to EQL.</pre>
                   </article>
                 </li><li>
+                  <a name="FOR:HASH-TABLE-ITERATOR"/>
+                  <article>
+                    <header class="function">
+                      <span class="type">function</span>
+                      <code>
+                        <h4><a href="#FOR:HASH-TABLE-ITERATOR" class="name">HASH-TABLE-ITERATOR</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(TABLE)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Returns a function to iterate over a hash-table.
+
+See CL:WITH-HASH-TABLE-ITERATOR</pre>
+                  </article>
+                </li><li>
                   <a name="FOR:NCONC"/>
                   <article>
                     <header class="function">
@@ -364,6 +687,21 @@ See REMOVE-CLAUSE</pre>
                       </code>
                     </header>
                     <pre class="docstring">Concatenates the lists given as arguments (by changing them)</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:PACKAGE-ITERATOR"/>
+                  <article>
+                    <header class="function">
+                      <span class="type">function</span>
+                      <code>
+                        <h4><a href="#FOR:PACKAGE-ITERATOR" class="name">PACKAGE-ITERATOR</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(PACKAGE STATUSES)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Returns a function to iterate over a package's symbols.
+
+See CL:WITH-PACKAGE-ITERATOR</pre>
                   </article>
                 </li><li>
                   <a name="FOR:REDUCE"/>
@@ -1018,6 +1356,49 @@ As soon as FORM returns non-NIL the for is aborted with END-FOR and the non-NIL 
                     <pre class="docstring">When FORM returns NIL, END-FOR is called.</pre>
                   </article>
                 </li><li>
+                  <a name="FOR:HAS-MORE"/>
+                  <article>
+                    <header class="generic">
+                      <span class="type">generic</span>
+                      <code>
+                        <h4><a href="#FOR:HAS-MORE" class="name">HAS-MORE</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(ITERATOR)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Returns a generalised boolean indicating whether the iterator has more items or not.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:MAKE-ITERATOR"/>
+                  <article>
+                    <header class="generic">
+                      <span class="type">generic</span>
+                      <code>
+                        <h4><a href="#FOR:MAKE-ITERATOR" class="name">MAKE-ITERATOR</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(OBJECT &amp;KEY LIMIT BUFFER-SIZE START &amp;ALLOW-OTHER-KEYS)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Create an iterator object for the given type of object.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:NEXT"/>
+                  <article>
+                    <header class="generic">
+                      <span class="type">generic</span>
+                      <code>
+                        <h4><a href="#FOR:NEXT" class="name">NEXT</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(ITERATOR)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Advances the iterator by one item and returns the new item.
+
+The behaviour is undefined if the iterator does not have more items.
+
+See HAS-MORE</pre>
+                  </article>
+                </li><li>
                   <a name="FOR:DEFINE-ALIAS-BINDING"/>
                   <article>
                     <header class="macro">
@@ -1058,6 +1439,9 @@ very least: the variable specified for the binding.
 
 Note that a binding function receives its arguments as literals and thus must
 process them like a macro would (destructive operations are bad juju).
+
+Also note that unlike normal functions, the &amp;environment lambda-list argument
+is available and its value will be passed on from the calling FOR macro.
 
 See BINDING
 See REMOVE-BINDING</pre>
@@ -1245,378 +1629,6 @@ is then properly updated with the respective element from value list.</pre>
 
 Essentially this means that the last form is appended to the form before it
 and this is then appended to the form before that, and so on.</pre>
-                  </article>
-                </li></ul>
-            </li><li class="package">
-              <h3>
-                <a name="FOR-ITERATOR" href="#FOR-ITERATOR">FOR-ITERATOR</a>
-                <span class="nicknames">(ORG.SHIRAKUMO.FOR.ITERATOR)</span>
-              </h3>
-              <ul><li>
-                  <a name="FOR-ITERATOR:ARRAY-ITERATOR"/>
-                  <article>
-                    <header class="class">
-                      <span class="type">class</span>
-                      <code>
-                        <h4><a href="#FOR-ITERATOR:ARRAY-ITERATOR" class="name">ARRAY-ITERATOR</a></h4>
-                        <span class="qualifiers"></span>
-                        <span class="arguments">()</span>
-                      </code>
-                    </header>
-                    <pre class="docstring">Iterator for general arrays.
-
-Supports setting the current element.
-
-See VECTOR-ITERATOR
-See TOTAL-LENGTH</pre>
-                  </article>
-                </li><li>
-                  <a name="FOR-ITERATOR:DIRECTORY-ITERATOR"/>
-                  <article>
-                    <header class="class">
-                      <span class="type">class</span>
-                      <code>
-                        <h4><a href="#FOR-ITERATOR:DIRECTORY-ITERATOR" class="name">DIRECTORY-ITERATOR</a></h4>
-                        <span class="qualifiers"></span>
-                        <span class="arguments">()</span>
-                      </code>
-                    </header>
-                    <pre class="docstring">Iterator for a DIRECTORY listing.
-
-On construction, this performs a simple DIRECTORY call on the given object
-and then iterates over the result list of pathnames.
-
-See LIST-ITERATOR</pre>
-                  </article>
-                </li><li>
-                  <a name="FOR-ITERATOR:HASH-TABLE-ITERATOR"/>
-                  <article>
-                    <header class="class">
-                      <span class="type">class</span>
-                      <code>
-                        <h4><a href="#FOR-ITERATOR:HASH-TABLE-ITERATOR" class="name">HASH-TABLE-ITERATOR</a></h4>
-                        <span class="qualifiers"></span>
-                        <span class="arguments">()</span>
-                      </code>
-                    </header>
-                    <pre class="docstring"/>
-                  </article>
-                </li><li>
-                  <a name="FOR-ITERATOR:ITERATOR"/>
-                  <article>
-                    <header class="class">
-                      <span class="type">class</span>
-                      <code>
-                        <h4><a href="#FOR-ITERATOR:ITERATOR" class="name">ITERATOR</a></h4>
-                        <span class="qualifiers"></span>
-                        <span class="arguments">()</span>
-                      </code>
-                    </header>
-                    <pre class="docstring">An iterator is responsible for iterating over a given data structure.
-
-See HAS-MORE
-See NEXT
-See CURRENT
-See MAKE-ITERATOR
-See OBJECT</pre>
-                  </article>
-                </li><li>
-                  <a name="FOR-ITERATOR:LIST-ITERATOR"/>
-                  <article>
-                    <header class="class">
-                      <span class="type">class</span>
-                      <code>
-                        <h4><a href="#FOR-ITERATOR:LIST-ITERATOR" class="name">LIST-ITERATOR</a></h4>
-                        <span class="qualifiers"></span>
-                        <span class="arguments">()</span>
-                      </code>
-                    </header>
-                    <pre class="docstring">Iterator for proper lists.
-
-Supports setting the current element.
-
-See ITERATOR</pre>
-                  </article>
-                </li><li>
-                  <a name="FOR-ITERATOR:PACKAGE-ITERATOR"/>
-                  <article>
-                    <header class="class">
-                      <span class="type">class</span>
-                      <code>
-                        <h4><a href="#FOR-ITERATOR:PACKAGE-ITERATOR" class="name">PACKAGE-ITERATOR</a></h4>
-                        <span class="qualifiers"></span>
-                        <span class="arguments">()</span>
-                      </code>
-                    </header>
-                    <pre class="docstring">Iterator for the symbols in a package.
-
-The type of symbols that are iterated can be set through the :STATUS initarg, which must
-be a list containing any of the following keywords: :INTERNAL :EXTERNAL :INHERITED
-
-See PREFETCH
-See ITERATOR</pre>
-                  </article>
-                </li><li>
-                  <a name="FOR-ITERATOR:RANDOM-ITERATOR"/>
-                  <article>
-                    <header class="class">
-                      <span class="type">class</span>
-                      <code>
-                        <h4><a href="#FOR-ITERATOR:RANDOM-ITERATOR" class="name">RANDOM-ITERATOR</a></h4>
-                        <span class="qualifiers"></span>
-                        <span class="arguments">()</span>
-                      </code>
-                    </header>
-                    <pre class="docstring">Iterator for random numbers.
-
-This iterator can be constructed through either a RANDOM-STATE object or through the
-:RANDOM keyword as an object. The argument for RANDOM that determines its limit can be
-passed through the :LIMIT initarg.
-
-See ITERATOR</pre>
-                  </article>
-                </li><li>
-                  <a name="FOR-ITERATOR:STREAM-ITERATOR"/>
-                  <article>
-                    <header class="class">
-                      <span class="type">class</span>
-                      <code>
-                        <h4><a href="#FOR-ITERATOR:STREAM-ITERATOR" class="name">STREAM-ITERATOR</a></h4>
-                        <span class="qualifiers"></span>
-                        <span class="arguments">()</span>
-                      </code>
-                    </header>
-                    <pre class="docstring">Iterator for input streams.
-
-The stream is read through a buffer, the size of which can be set via the :BUFFER-SIZE
-initarg.
-
-Supports setting the &quot;current&quot; element if the stream supports writing to it of course.
-
-See BUFFER
-See INDEX
-See LIMIT
-See ITERATOR</pre>
-                  </article>
-                </li><li>
-                  <a name="FOR-ITERATOR:VECTOR-ITERATOR"/>
-                  <article>
-                    <header class="class">
-                      <span class="type">class</span>
-                      <code>
-                        <h4><a href="#FOR-ITERATOR:VECTOR-ITERATOR" class="name">VECTOR-ITERATOR</a></h4>
-                        <span class="qualifiers"></span>
-                        <span class="arguments">()</span>
-                      </code>
-                    </header>
-                    <pre class="docstring">Iterator for vectors.
-
-Supports setting the current element.
-
-See START
-See ITERATOR</pre>
-                  </article>
-                </li><li>
-                  <a name="FOR-ITERATOR:BUFFER"/>
-                  <article>
-                    <header class="accessor">
-                      <span class="type">accessor</span>
-                      <code>
-                        <h4><a href="#FOR-ITERATOR:BUFFER" class="name">BUFFER</a></h4>
-                        <span class="qualifiers"></span>
-                        <span class="arguments">(OBJECT)</span>
-                      </code>
-                    </header>
-                    <pre class="docstring">Accessor to the stream-iterator's buffer.
-
-See STREAM-ITERATOR</pre>
-                  </article>
-                </li><li>
-                  <a name="FOR-ITERATOR:CURRENT"/>
-                  <article>
-                    <header class="accessor">
-                      <span class="type">accessor</span>
-                      <code>
-                        <h4><a href="#FOR-ITERATOR:CURRENT" class="name">CURRENT</a></h4>
-                        <span class="qualifiers"></span>
-                        <span class="arguments">(ITERATOR)</span>
-                      </code>
-                    </header>
-                    <pre class="docstring">Accessor to the current item of the iterator.
-
-The behaviour is undefined if CURRENT is used before NEXT has been called for a first time.
-Some (but not all) iterators may support setting the current element to a new value.
-
-See NEXT</pre>
-                  </article>
-                </li><li>
-                  <a name="FOR-ITERATOR:INDEX"/>
-                  <article>
-                    <header class="accessor">
-                      <span class="type">accessor</span>
-                      <code>
-                        <h4><a href="#FOR-ITERATOR:INDEX" class="name">INDEX</a></h4>
-                        <span class="qualifiers"></span>
-                        <span class="arguments">(OBJECT)</span>
-                      </code>
-                    </header>
-                    <pre class="docstring">Accessor to the current index within the buffer.
-
-See STREAM-ITERATOR</pre>
-                  </article>
-                </li><li>
-                  <a name="FOR-ITERATOR:LIMIT"/>
-                  <article>
-                    <header class="accessor">
-                      <span class="type">accessor</span>
-                      <code>
-                        <h4><a href="#FOR-ITERATOR:LIMIT" class="name">LIMIT</a></h4>
-                        <span class="qualifiers"></span>
-                        <span class="arguments">(OBJECT)</span>
-                      </code>
-                    </header>
-                    <pre class="docstring">Accessor to the amount of data that is currently filled in the buffer.
-
-See STREAM-ITERATOR</pre>
-                  </article>
-                </li><li>
-                  <a name="FOR-ITERATOR:OBJECT"/>
-                  <article>
-                    <header class="accessor">
-                      <span class="type">accessor</span>
-                      <code>
-                        <h4><a href="#FOR-ITERATOR:OBJECT" class="name">OBJECT</a></h4>
-                        <span class="qualifiers"></span>
-                        <span class="arguments">(OBJECT)</span>
-                      </code>
-                    </header>
-                    <pre class="docstring">Accessor to the data structure the iterator is iterating over.
-
-Note that this is not necessarily the same object as what was passed into the
-constructor of the iterator. The iterator is free to modify this slot as it sees fit.
-
-See ITERATOR</pre>
-                  </article>
-                </li><li>
-                  <a name="FOR-ITERATOR:PREFETCH"/>
-                  <article>
-                    <header class="accessor">
-                      <span class="type">accessor</span>
-                      <code>
-                        <h4><a href="#FOR-ITERATOR:PREFETCH" class="name">PREFETCH</a></h4>
-                        <span class="qualifiers"></span>
-                        <span class="arguments">(OBJECT)</span>
-                      </code>
-                    </header>
-                    <pre class="docstring">Cache for the next value
-
-Since the iterator constructs provided by CL do not allow merely testing whether a next
-element is available without losing it if there is one, we must cache the value on a
-HAS-MORE call and then use that on NEXT instead of calling the iterator function twice.
-
-See PACKAGE-ITERATOR
-See HASH-TABLE-ITERATOR</pre>
-                  </article>
-                </li><li>
-                  <a name="FOR-ITERATOR:START"/>
-                  <article>
-                    <header class="accessor">
-                      <span class="type">accessor</span>
-                      <code>
-                        <h4><a href="#FOR-ITERATOR:START" class="name">START</a></h4>
-                        <span class="qualifiers"></span>
-                        <span class="arguments">(OBJECT)</span>
-                      </code>
-                    </header>
-                    <pre class="docstring">Accessor to the index that points to the next element of the vector-iterator.</pre>
-                  </article>
-                </li><li>
-                  <a name="FOR-ITERATOR:TOTAL-LENGTH"/>
-                  <article>
-                    <header class="accessor">
-                      <span class="type">accessor</span>
-                      <code>
-                        <h4><a href="#FOR-ITERATOR:TOTAL-LENGTH" class="name">TOTAL-LENGTH</a></h4>
-                        <span class="qualifiers"></span>
-                        <span class="arguments">(OBJECT)</span>
-                      </code>
-                    </header>
-                    <pre class="docstring">Slot holding the array-total-size.
-
-See ARRAY-ITERATOR</pre>
-                  </article>
-                </li><li>
-                  <a name="FOR-ITERATOR:HASH-TABLE-ITERATOR"/>
-                  <article>
-                    <header class="function">
-                      <span class="type">function</span>
-                      <code>
-                        <h4><a href="#FOR-ITERATOR:HASH-TABLE-ITERATOR" class="name">HASH-TABLE-ITERATOR</a></h4>
-                        <span class="qualifiers"></span>
-                        <span class="arguments">(TABLE)</span>
-                      </code>
-                    </header>
-                    <pre class="docstring">Returns a function to iterate over a hash-table.
-
-See CL:WITH-HASH-TABLE-ITERATOR</pre>
-                  </article>
-                </li><li>
-                  <a name="FOR-ITERATOR:PACKAGE-ITERATOR"/>
-                  <article>
-                    <header class="function">
-                      <span class="type">function</span>
-                      <code>
-                        <h4><a href="#FOR-ITERATOR:PACKAGE-ITERATOR" class="name">PACKAGE-ITERATOR</a></h4>
-                        <span class="qualifiers"></span>
-                        <span class="arguments">(PACKAGE STATUSES)</span>
-                      </code>
-                    </header>
-                    <pre class="docstring">Returns a function to iterate over a package's symbols.
-
-See CL:WITH-PACKAGE-ITERATOR</pre>
-                  </article>
-                </li><li>
-                  <a name="FOR-ITERATOR:HAS-MORE"/>
-                  <article>
-                    <header class="generic">
-                      <span class="type">generic</span>
-                      <code>
-                        <h4><a href="#FOR-ITERATOR:HAS-MORE" class="name">HAS-MORE</a></h4>
-                        <span class="qualifiers"></span>
-                        <span class="arguments">(ITERATOR)</span>
-                      </code>
-                    </header>
-                    <pre class="docstring">Returns a generalised boolean indicating whether the iterator has more items or not.</pre>
-                  </article>
-                </li><li>
-                  <a name="FOR-ITERATOR:MAKE-ITERATOR"/>
-                  <article>
-                    <header class="generic">
-                      <span class="type">generic</span>
-                      <code>
-                        <h4><a href="#FOR-ITERATOR:MAKE-ITERATOR" class="name">MAKE-ITERATOR</a></h4>
-                        <span class="qualifiers"></span>
-                        <span class="arguments">(OBJECT &amp;KEY LIMIT BUFFER-SIZE START &amp;ALLOW-OTHER-KEYS)</span>
-                      </code>
-                    </header>
-                    <pre class="docstring">Create an iterator object for the given type of object.</pre>
-                  </article>
-                </li><li>
-                  <a name="FOR-ITERATOR:NEXT"/>
-                  <article>
-                    <header class="generic">
-                      <span class="type">generic</span>
-                      <code>
-                        <h4><a href="#FOR-ITERATOR:NEXT" class="name">NEXT</a></h4>
-                        <span class="qualifiers"></span>
-                        <span class="arguments">(ITERATOR)</span>
-                      </code>
-                    </header>
-                    <pre class="docstring">Advances the iterator by one item and returns the new item.
-
-The behaviour is undefined if the iterator does not have more items.
-
-See HAS-MORE</pre>
                   </article>
                 </li></ul>
             </li></ul>
