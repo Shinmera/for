@@ -106,5 +106,8 @@
    #:with-interleaving
    #:update))
 
-(do-external-symbols (symb '#:for-minimal)
-  (export symb '#:for))
+(do-external-symbols (symb '#:org.shirakumo.for.minimal)
+  (export symb '#:org.shirakumo.for))
+
+(do-external-symbols (symb '#:org.shirakumo.for.iterator)
+  (export symb '#:org.shirakumo.for))
