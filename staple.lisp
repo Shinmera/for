@@ -30,5 +30,5 @@
 
 (defun staple ()
   (staple:generate :for
-                   :packages '(:for :for-iterator)
+                   :packages '(:for)
                    :if-exists :supersede))
