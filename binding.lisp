@@ -39,10 +39,13 @@
           ',name))
 
 (defmacro define-direct-binding (name args &body body)
-  `(progn (setf (binding ',name)
-                (lambda ,args
-                  ,@body))
-          ',name))
+  (let ((env (or (lambda-fiddle:environment-lambda-var args) (gensym "ENVIRONMENT"))))
+    `(progn (setf (binding ',name)
+                  (lambda ,(lambda-fiddle:remove-environment-part args)
+                    (let ((,env *environment*))
+                      (declare (ignorable ,env))
+                      ,@body)))
+            ',name)))
 
 (defun translate-form-vars (form from to)
   ;; FIXME: This needs a code walker...

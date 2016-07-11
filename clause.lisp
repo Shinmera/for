@@ -35,10 +35,13 @@
   (setf (documentation func T) docstring))
 
 (defmacro define-direct-clause (name args &body body)
-  `(progn (setf (clause ',name)
-                (lambda ,args
-                  ,@body))
-          ',name))
+  (let ((env (or (lambda-fiddle:environment-lambda-var args) (gensym "ENVIRONMENT"))))
+    `(progn (setf (clause ',name)
+                  (lambda ,(lambda-fiddle:remove-environment-part args)
+                    (let ((,env *environment*))
+                      (declare (ignorable ,env))
+                      ,@body)))
+            ',name)))
 
 (defmacro define-simple-clause (name args &body body)
   (multiple-value-bind (args outer-let inner-let result-let) (compute-binding-parts NIL NIL args)

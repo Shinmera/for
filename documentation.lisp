@@ -43,6 +43,9 @@ very least: the variable specified for the binding.
 Note that a binding function receives its arguments as literals and thus must
 process them like a macro would (destructive operations are bad juju).
 
+Also note that unlike normal functions, the &environment lambda-list argument
+is available and its value will be passed on from the calling FOR macro.
+
 See BINDING
 See REMOVE-BINDING")
 
@@ -181,6 +184,9 @@ respective clause expression.
 Note that a clause function receives its arguments as literals and thus must
 process them like a macro would (destructive operations are bad juju).
 
+Also note that unlike normal functions, the &environment lambda-list argument
+is available and its value will be passed on from the calling FOR macro.
+
 See CLAUSE
 See REMOVE-CLAUSE")
 
@@ -215,6 +221,9 @@ See CLAUSE"))
 
 ;; for.lisp
 (docs:define-docs
+  (variable *environment*
+    "This variable will be bound to the environment object during the expansion of the FOR macro.")
+  
   (function with-for-tagbody
     "Wraps the body in a looping tagbody, running the EXIT forms when the loop ends.
 
