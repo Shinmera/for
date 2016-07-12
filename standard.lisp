@@ -76,13 +76,13 @@
 (define-value-binding ranging ((var (if ascending (- from by) (+ from by))) from to &key (by 1) &aux (ascending (< from to)))
   (declare (ignore from))
   `(cond (,ascending
-          (when (<= ,to ,var)
-            (end-for))
-          (incf ,var ,by))
+          (incf ,var ,by)
+          (when (< ,to ,var)
+            (end-for)))
          (T
-          (when (<= ,var ,to)
-            (end-for))
-          (decf ,var ,by))))
+          (decf ,var ,by)
+          (when (< ,var ,to)
+            (end-for)))))
 
 (define-value-binding from ((var (if ascending (- from by) (+ from by))) from &key (to NIL to-p) (by 1) &aux (ascending (< from to)))
   (declare (ignore from))
