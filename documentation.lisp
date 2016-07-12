@@ -512,11 +512,11 @@ Accepts an optional list of arguments that qualify the type of symbols to iterat
 Each type must be one of :INTERNAL :EXTERNAL :INHERITED. If no arguments are given, it
 defaults to (:INTERNAL :EXTERNAL :INHERITED).")
   
-  (binding between
+  (binding ranging
     "Iterates the var over the given range.
 
 Ranges can be either decreasing or increasing. Both limits are inclusive. This means that
-(a between 0 2) iterates over 0, 1, and 2.
+(a ranging 0 2) iterates over 0, 1, and 2.
 
 An optional BY keyword argument is accepted, which determines the step.")
   
