@@ -109,7 +109,6 @@
 <li><code><a href="#FOR:ACROSS">across</a></code></li>
 <li><code><a href="#FOR:APPENDING">appending</a></code> / <code><a href="#FOR:APPEND">append</a></code></li>
 <li><code><a href="#FOR:AS">as</a></code></li>
-<li><code><a href="#FOR:BETWEEN">between</a></code></li>
 <li><code><a href="#FOR:COLLECTING">collecting</a></code> / <code><a href="#FOR:COLLECT">collect</a></code></li>
 <li><code><a href="#FOR:COUNTING">counting</a></code> / <code><a href="#FOR:COUNT">count</a></code></li>
 <li><code><a href="#FOR:FROM">from</a></code></li>
@@ -119,6 +118,7 @@
 <li><code><a href="#FOR:NCONCING">nconcing</a></code> / <code><a href="#FOR:NCONC">nconc</a></code></li>
 <li><code><a href="#FOR:ON">on</a></code></li>
 <li><code><a href="#FOR:OVER">over</a></code></li>
+<li><code><a href="#FOR:RANGING">ranging</a></code> / <code><a href="#FOR:RANGE">range</a></code></li>
 <li><code><a href="#FOR:REDUCING">reducing</a></code> / <code><a href="#FOR:REDUCE">reduce</a></code></li>
 <li><code><a href="#FOR:REPEATING">repeating</a></code> / <code><a href="#FOR:REPEAT">repeat</a></code></li>
 <li><code><a href="#FOR:SUMMING">summing</a></code> / <code><a href="#FOR:SUM">sum</a></code></li>
@@ -823,24 +823,6 @@ This returns the var on END-FOR.</pre>
 This returns the var on END-FOR.</pre>
                   </article>
                 </li><li>
-                  <a name="FOR:BETWEEN"/>
-                  <article>
-                    <header class="binding">
-                      <span class="type">binding</span>
-                      <code>
-                        <h4><a href="#FOR:BETWEEN" class="name">BETWEEN</a></h4>
-                        <span class="qualifiers"></span>
-                        <span class="arguments">(VAR FROM TO &amp;KEY (BY 1))</span>
-                      </code>
-                    </header>
-                    <pre class="docstring">Iterates the var over the given range.
-
-Ranges can be either decreasing or increasing. The starting value is inclusive, whereas
-the ending value is exclusive. This means that (a between 0 2) iterates over 0 and 1.
-
-An optional BY keyword argument is accepted, which determines the step.</pre>
-                  </article>
-                </li><li>
                   <a name="FOR:COLLECT"/>
                   <article>
                     <header class="binding">
@@ -908,12 +890,15 @@ This returns the var on END-FOR.</pre>
                       <code>
                         <h4><a href="#FOR:FROM" class="name">FROM</a></h4>
                         <span class="qualifiers"></span>
-                        <span class="arguments">(VAR FROM &amp;KEY (BY 1))</span>
+                        <span class="arguments">(VAR FROM &amp;KEY (TO NIL TO-P) (BY 1))</span>
                       </code>
                     </header>
-                    <pre class="docstring">Increases the var by a step every time.
+                    <pre class="docstring">Increases the var by a step every time up to an optional limit.
 
-An optional BY keyword argument is accepted, which determines the step.</pre>
+An optional BY keyword argument is accepted, which determines the step.
+An optional TO keyword argument is accepted, which determines the exclusive limit.
+This means (a from 0 :to 2) iterates over 0 and 1. If TO is smaller than FROM then
+the variable is decreased by BY every step.</pre>
                   </article>
                 </li><li>
                   <a name="FOR:IN"/>
@@ -1058,6 +1043,42 @@ Potentially accepts arbitrary arguments, depending on which iterator is selected
 for the respective object.
 
 See FOR-ITERATOR:MAKE-ITERATOR</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:RANGE"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:RANGE" class="name">RANGE</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR FROM TO &amp;KEY (BY 1))</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Iterates the var over the given range.
+
+Ranges can be either decreasing or increasing. Both limits are inclusive. This means that
+(a ranging 0 2) iterates over 0, 1, and 2.
+
+An optional BY keyword argument is accepted, which determines the step.</pre>
+                  </article>
+                </li><li>
+                  <a name="FOR:RANGING"/>
+                  <article>
+                    <header class="binding">
+                      <span class="type">binding</span>
+                      <code>
+                        <h4><a href="#FOR:RANGING" class="name">RANGING</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(VAR FROM TO &amp;KEY (BY 1))</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Iterates the var over the given range.
+
+Ranges can be either decreasing or increasing. Both limits are inclusive. This means that
+(a ranging 0 2) iterates over 0, 1, and 2.
+
+An optional BY keyword argument is accepted, which determines the step.</pre>
                   </article>
                 </li><li>
                   <a name="FOR:REDUCE"/>
