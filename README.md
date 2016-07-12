@@ -78,7 +78,7 @@ The following bindings are included in the `for-minimal` package:
 * `nconcing` / `nconc`
 * `on`
 * `over`
-* `ranging`
+* `ranging` / `range`
 * `reducing` / `reduce`
 * `repeating` / `repeat`
 * `summing` / `sum`

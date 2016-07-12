@@ -73,6 +73,7 @@
    #:until
    #:returning
    #:update
+   #:range
    #:repeat
    #:collect
    #:append

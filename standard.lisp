@@ -187,6 +187,7 @@
         (end-for)))))
 
 (define-alias-binding update updating)
+(define-alias-binding range ranging)
 (define-alias-binding repeat repeating)
 (define-alias-binding collect collecting)
 (define-alias-binding append appending)
