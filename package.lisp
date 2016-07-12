@@ -54,7 +54,7 @@
    #:table-values
    #:table-pairs
    #:symbols
-   #:between
+   #:ranging
    #:from
    #:repeating
    #:=

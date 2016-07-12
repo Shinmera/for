@@ -69,7 +69,6 @@ The following bindings are included in the `for-minimal` package:
 * `across`
 * `appending` / `append`
 * `as`
-* `between`
 * `collecting` / `collect`
 * `counting` / `count`
 * `from`
@@ -79,6 +78,7 @@ The following bindings are included in the `for-minimal` package:
 * `nconcing` / `nconc`
 * `on`
 * `over`
+* `ranging`
 * `reducing` / `reduce`
 * `repeating` / `repeat`
 * `summing` / `sum`

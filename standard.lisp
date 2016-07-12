@@ -73,7 +73,7 @@
          (setf ,var ,symbol)
          (end-for))))
 
-(define-value-binding between ((var (if ascending (- from by) (+ from by))) from to &key (by 1) &aux (ascending (< from to)))
+(define-value-binding ranging ((var (if ascending (- from by) (+ from by))) from to &key (by 1) &aux (ascending (< from to)))
   (declare (ignore from))
   `(cond (,ascending
           (when (<= ,to ,var)
