@@ -515,15 +515,18 @@ defaults to (:INTERNAL :EXTERNAL :INHERITED).")
   (binding between
     "Iterates the var over the given range.
 
-Ranges can be either decreasing or increasing. The starting value is inclusive, whereas
-the ending value is exclusive. This means that (a between 0 2) iterates over 0 and 1.
+Ranges can be either decreasing or increasing. Both limits are inclusive. This means that
+(a between 0 2) iterates over 0, 1, and 2.
 
 An optional BY keyword argument is accepted, which determines the step.")
   
   (binding from
-    "Increases the var by a step every time.
+    "Increases the var by a step every time up to an optional limit.
 
-An optional BY keyword argument is accepted, which determines the step.")
+An optional BY keyword argument is accepted, which determines the step.
+An optional TO keyword argument is accepted, which determines the exclusive limit.
+This means (a from 0 :to 2) iterates over 0 and 1. If TO is smaller than FROM then
+the variable is decreased by BY every step.")
   
   (binding repeating
     "Increases the var the given amount of times starting with 1.
