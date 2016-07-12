@@ -84,7 +84,7 @@
           (when (< ,var ,to)
             (end-for)))))
 
-(define-value-binding from ((var (if ascending (- from by) (+ from by))) from &key (to NIL to-p) (by 1) &aux (ascending (< from to)))
+(define-value-binding from ((var (if ascending (- from by) (+ from by))) from &key (to NIL to-p) (by 1) &aux (ascending (or (not to) (< from to))))
   (declare (ignore from))
   (if to-p
       `(cond (,ascending
