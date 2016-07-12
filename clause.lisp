@@ -11,7 +11,7 @@
 (defun clause (name)
   (let ((result (or (gethash name *clauses*)
                     (gethash (find-symbol (string name) #.*package*) *clauses*))))
-    (if (and result (symbolp result)) (binding result) result)))
+    (if (and result (symbolp result)) (clause result) result)))
 
 (defun (setf clause) (func name)
   (setf (gethash name *clauses*) func))
