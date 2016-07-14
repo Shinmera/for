@@ -6,6 +6,37 @@
 
 (in-package #:org.shirakumo.for)
 
+(defun remove-bindings (bindings form)
+  (cond ((and (listp form) (find (first form) '(let let*)))
+         `(,(first form)
+           ,(loop for binding in (second form)
+                  unless (find (first binding) bindings :key #'car)
+                  collect binding)
+           ,@(cddr form)))
+        (T form)))
+
+(define-direct-binding being (var &rest sub-bindings)
+  (let ((bindings (loop for bind in sub-bindings collect (list* var bind)))
+        (being-counter (gensym (string 'being-counter)))
+        (being-tag (gensym (string 'being-tag)))
+        (vars (loop for var in (lambda-fiddle:extract-lambda-vars (enlist var))
+                    collect `(,var NIL))))
+    (multiple-value-bind (bind-init bind-forms) (convert-bindings bindings)
+      (values `(with-interleaving
+                 (let ((,being-counter 0)
+                       ,@vars))
+                 ,@(loop for bind in bind-init collect (remove-bindings vars bind)))
+              `(tagbody
+                  ,being-tag
+                  (case ,being-counter
+                    ,@(loop for form in (butlast bind-forms)
+                            for i from 0
+                            collect `(,i (macrolet ((end-for ()
+                                                      `(progn (incf ,',being-counter)
+                                                              (go ,',being-tag))))
+                                           ,form)))
+                    (T ,@(last bind-forms))))))))
+
 (define-value-binding as ((var value) value)
   (declare (ignorable value))
   (values NIL

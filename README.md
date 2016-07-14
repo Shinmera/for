@@ -69,6 +69,7 @@ The following bindings are included in the `for-minimal` package:
 * `across`
 * `appending` / `append`
 * `as`
+* `being`
 * `collecting` / `collect`
 * `counting` / `count`
 * `from`

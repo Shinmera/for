@@ -445,6 +445,26 @@ See ITERATOR"))
   (clause symb))
 
 (docs:define-docs
+  (binding being
+    "Sequences multiple bindings onto the same var.
+
+Expected as arguments is a list of binding expressions, except with each of them missing
+the initial var as that is supplied by the var of the BEING binding.
+
+During the iteration the var is then updated by the first inner binding until that calls
+END-FOR, after which the var is then updated by the second binding and so forth until the
+last binding calls END-FOR, in which case the behaviour is as usual.
+
+Essentially this just does what you expect it would: it chains multiple bindings onto the
+same var, sequentially using the next one after the one before finishes.
+
+May support UPDATE depending on the inner bindings.
+
+Note that only bindings that output a LET/LET* as their surrounding form are supported
+without potential warnings about unused variables. The bindings also must not output the
+var as a symbol macro as it is not possible to update that depending on which binding
+is currently active.")
+  
   (binding as
     "Simply binds the value of the form to the var.
 
