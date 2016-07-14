@@ -30,10 +30,11 @@
          (T
           (end-for))))
 
-(define-value-binding across (var vector &aux (i -1) (length (length vector)))
-  `(if (= ,length (incf ,i))
-       (end-for)
-       (update ,var (aref ,vector ,i))))
+(define-value-binding across (var vector &aux (i 0) (length (length vector)))
+  `(cond ((= ,length ,i)
+          (end-for))
+         (T (update ,var (aref ,vector ,i))
+            (incf ,i))))
 
 (define-value-binding over (var iterable &rest iterator-args &aux (iterator (apply #'make-iterator iterable iterator-args)))
   `(if (has-more ,iterator)
