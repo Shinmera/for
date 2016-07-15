@@ -68,6 +68,12 @@ Sometimes you may want to iterate over multiple things in sequence rather than i
                (across #((勉強 studying) (宿題 home-work) (授業 lesson) (試験 exam)))))
       (format T "~&~a: ~a" k v))
 
+If a binding should only be updated based on a condition, there's the `when` and `unless` bindings that defer based on a test.
+
+    (for:for ((random = (random 10))
+              (list when (evenp random) collect random))
+      (until (= 10 (length list))))
+
 The following bindings are included in the `for-minimal` package:
 
 * `=`
