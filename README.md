@@ -33,7 +33,7 @@ If we have multiple bindings or clauses that might have useful values to return,
               (b collect a))
       (thereis (evenp a)))
       
-In order for short-circuiting clauses to have highest priority on values, clause-values are always returned first followed by binding values. Otherwise the order follows the declaration order of the respective clauses/bindings.
+In order for short-circuiting clauses to have highest priority on values, clause-values are always returned first followed by binding values. Otherwise the order follows the declaration order of the respective clauses/bindings. Note that clauses must appear as a "top-level" form within the `for` body and cannot appear as the result of a macroexpansion.
 
 For also features a generic iterator construct that allows you to iterate over a multitude of different data types without having to do a case-distinction by yourself. We already saw this with the `over *random-state*` binding from the previous example.
 
@@ -61,7 +61,12 @@ Some of the bindings also support destructuring the current item by a destructur
       
 You can check a binding's or clause's documentation with `(documentation 'in 'for:binding)` which will tell you whether it supports destructuring through `update`.
 
-Note that clauses must appear as a "top-level" form within the `for` body and cannot appear as the result of a macroexpansion.
+Sometimes you may want to iterate over multiple things in sequence rather than in parallel. For this you can use the `being` binding, which allows you to pass a list of sub-bindings to sequentially use.
+
+    (for:for (((k v) being
+               (in '((駅 station) (出口 exit) (特急 express-train)))
+               (across #((勉強 studying) (宿題 home-work) (授業 lesson) (試験 exam)))))
+      (format T "~&~a: ~a" k v))
 
 The following bindings are included in the `for-minimal` package:
 
