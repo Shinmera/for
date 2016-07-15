@@ -464,6 +464,22 @@ Note that only bindings that output a LET/LET* as their surrounding form are sup
 without potential warnings about unused variables. The bindings also must not output the
 var as a symbol macro as it is not possible to update that depending on which binding
 is currently active.")
+
+  (binding when
+    "Conditionally apply a binding.
+
+The sub-binding's step form is only evaluated if the given test succeeds. This means that
+the var is only updated and the loop can only be ended when the test returns non-NIL.
+
+May support UPDATE depending on the sub-binding.")
+
+  (binding unless
+    "Conditionally apply a binding.
+
+The sub-binding's step form is only evaluated if the given test fails. This means that
+the var is only updated and the loop can only be ended when the test returns NIL.
+
+May support UPDATE depending on the sub-binding.")
   
   (binding as
     "Simply binds the value of the form to the var.

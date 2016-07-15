@@ -37,6 +37,18 @@
                                            ,form)))
                     (T ,@(last bind-forms))))))))
 
+(define-direct-binding when (var test sub-binding &rest args)
+  (multiple-value-bind (init body value) (apply (binding sub-binding) var args)
+    (values init
+            `(when ,test ,body)
+            value)))
+
+(define-direct-binding unless (var test sub-binding &rest args)
+  (multiple-value-bind (init body value) (apply (binding sub-binding) var args)
+    (values init
+            `(unless ,test ,body)
+            value)))
+
 (define-value-binding as ((var value) value)
   (declare (ignorable value))
   (values NIL

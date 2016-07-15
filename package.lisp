@@ -45,6 +45,8 @@
   ;; standard.lisp
   (:export
    #:being
+   #:when
+   #:unless
    #:as
    #:in
    #:on

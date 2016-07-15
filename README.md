@@ -87,7 +87,9 @@ The following bindings are included in the `for-minimal` package:
 * `table-keys`
 * `table-pairs`
 * `table-values`
+* `unless`
 * `updating` / `update`
+* `when`
 
 The following clauses are included in the `for-minimal` package:
 
