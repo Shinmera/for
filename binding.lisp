@@ -147,8 +147,8 @@
                                ,(unless symbol-macro-p varform))
                          (declare (ignorable ,,@(mapcar #'delist outer-let)))
                          ,,@outer-decls)
-                       ,,@(when symbol-macro-p
-                            ``(symbol-macrolet ,,varform)))
+                       ,,(when symbol-macro-p
+                           ``(symbol-macrolet ,,varform)))
                     (let ,inner-let
                       (declare (ignorable ,@(mapcar #'delist inner-let)))
                       ,@inner-decls
