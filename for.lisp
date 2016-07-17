@@ -22,7 +22,10 @@
 
 (defmacro with-for-block (() &body body)
   `(block NIL
-     (macrolet ((return-for (&rest values) `(return (values ,@values))))
+     (macrolet ((return-for (&rest values)
+                  (cond ((not values) `(return NIL))
+                        ((cdr values) `(return (values ,@values)))
+                        (T            `(return ,(first values))))))
        ,@body)))
 
 (defmacro for (&environment env bindings &body body)
