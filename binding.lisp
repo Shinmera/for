@@ -91,63 +91,89 @@
             `(loop for ,vargen in (lambda-fiddle:extract-lambda-vars (enlist ,(first var)))
                    collect (list ,vargen ,(translate-form-vars (second var) all all-gen-gens))))))
 
-(defmacro define-form-binding (name (var &rest args) &body body)
-  (multiple-value-bind (args outer-let inner-let result-let varform) (compute-binding-parts var NIL args)
-    `(define-direct-binding ,name ,args
-       (let ,outer-let
-         (values* `(let* ,(list*
-                           ,@result-let
-                           ,varform)
-                     (declare (ignorable ,,@(mapcar #'delist outer-let))))
-                  (let ,inner-let
-                    (declare (ignorable ,@(mapcar #'delist inner-let)))
-                    ,@body))))))
+(defun normalize-declaration-inner (inner)
+  (case (first inner)
+    ;; These are the ones we know and can split
+    ((dynamic-extent ignorable ignore inline notinline optimize special)
+     (loop for arg in (cdr inner)
+           collect (list (first inner) arg)))
+    ;; These have an arg
+    ((ftype type)
+     (loop for arg in (cddr inner)
+           collect (list (first inner) (second inner) arg)))
+    ;; Everything else is just verbatim
+    (T (list inner))))
 
-(defmacro define-accumulation-binding (name (var &rest args) &body body)
-  `(define-form-binding ,name (,var ,@args)
-     (values
-      (progn ,@body)
-      (delist var))))
+(defun normalize-declarations (body)
+  (let* ((exprs (form-fiddle:lambda-declarations `(lambda () ,@body)))
+         (decls (loop for expr in exprs append (cdr expr)))
+         (norms (loop for decl in decls
+                      append (normalize-declaration-inner decl))))
+    (loop for norm in norms
+          collect `(declare ,norm))))
 
-(defmacro define-form-symbol-macro-binding (name (var &rest args) &body body)
-  (multiple-value-bind (args outer-let inner-let result-let varform) (compute-binding-parts var NIL args)
-    `(define-direct-binding ,name ,args
-       (let ,outer-let
-         (values* `(with-interleaving
-                     (let* ,(list
-                             ,@result-let)
-                       (declare (ignorable ,,@(mapcar #'delist outer-let))))
-                     (symbol-macrolet ,,varform))
-                  (let ,inner-let
-                    (declare (ignorable ,@(mapcar #'delist inner-let)))
-                    ,@body))))))
+(defun compute-declaration-parts (body inner-let)
+  (flet ((outer-decl-p (decl)
+           (find (first (second decl)) '(dynamic-extent ftype inline notinline optimize special type)))
+         (var-for-var (var)
+           (or (second (assoc var inner-let)) var)))
+    (let* ((decls (normalize-declarations body))
+           (outer (remove-if-not #'outer-decl-p decls))
+           (inner (remove-if #'outer-decl-p decls))
+           (translated-outer
+             (loop for decl in outer
+                   for (type arg1 arg2) = (second decl)
+                   collect (case type
+                             (type
+                              ``(declare (type ,',arg1 ,,(var-for-var arg2))))
+                             (dynamic-extent
+                              ``(declare (dynamic-extent ,,(var-for-var arg1))))
+                             (special
+                              ``(declare (special ,,(var-for-var arg1))))
+                             (T
+                              ``decl)))))
+      (values (form-fiddle:lambda-forms `(lambda () ,@body))
+              translated-outer
+              inner))))
 
-(defmacro define-value-binding (name (var &rest args) &body body)
-  (let ((vars (lambda-fiddle:extract-lambda-vars (lambda-fiddle:remove-aux-part args))))
-    (multiple-value-bind (args outer-let inner-let result-let varform) (compute-binding-parts var vars args)
-      `(define-direct-binding ,name ,args
-         (let ,outer-let
-           (values* `(let* ,(list*
-                             ,@result-let
-                             ,varform)
-                       (declare (ignorable ,,@(mapcar #'delist outer-let))))
-                    (let ,inner-let
-                      (declare (ignorable ,@(mapcar #'delist inner-let)))
-                      ,@body)))))))
-
-(defmacro define-value-symbol-macro-binding (name (var &rest args) &body body)
-  (let ((vars (lambda-fiddle:extract-lambda-vars (lambda-fiddle:remove-aux-part args))))
-    (multiple-value-bind (args outer-let inner-let result-let varform) (compute-binding-parts var vars args)
+(defun emit-binding-definition (name var args body &key extra-vars symbol-macro-p)
+  (multiple-value-bind (args outer-let inner-let result-let varform) (compute-binding-parts var extra-vars args)
+    (multiple-value-bind (body outer-decls inner-decls) (compute-declaration-parts body inner-let)
       `(define-direct-binding ,name ,args
          (let ,outer-let
            (values* `(with-interleaving
-                       (let* ,(list
-                               ,@result-let)
-                         (declare (ignorable ,,@(mapcar #'delist outer-let))))
-                       (symbol-macrolet ,,varform))
+                       (let* ,(list*
+                               ,@result-let
+                               ,(unless symbol-macro-p varform))
+                         (declare (ignorable ,,@(mapcar #'delist outer-let)))
+                         ,,@outer-decls)
+                       ,,@(when symbol-macro-p
+                            ``(symbol-macrolet ,,varform)))
                     (let ,inner-let
                       (declare (ignorable ,@(mapcar #'delist inner-let)))
+                      ,@inner-decls
                       ,@body)))))))
+
+(defmacro define-form-binding (name (var &rest args) &body body)
+  (emit-binding-definition name var args body))
+
+(defmacro define-accumulation-binding (name (var &rest args) &body body)
+  `(define-form-binding ,name (,var ,@args)
+     ,@(form-fiddle:lambda-declarations `(lambda () ,@body))
+     (values
+      (progn ,@(form-fiddle:lambda-forms `(lambda () ,@body)))
+      (delist var))))
+
+(defmacro define-form-symbol-macro-binding (name (var &rest args) &body body)
+  (emit-binding-definition name var args body :symbol-macro-p T))
+
+(defmacro define-value-binding (name (var &rest args) &body body)
+  (let ((vars (lambda-fiddle:extract-lambda-vars (lambda-fiddle:remove-aux-part args))))
+    (emit-binding-definition name var args body :extra-vars vars)))
+
+(defmacro define-value-symbol-macro-binding (name (var &rest args) &body body)
+  (let ((vars (lambda-fiddle:extract-lambda-vars (lambda-fiddle:remove-aux-part args))))
+    (emit-binding-definition name var args body :extra-vars vars :symbol-macro-p T)))
 
 (defun convert-bindings (bindings)
   (collect-for-values

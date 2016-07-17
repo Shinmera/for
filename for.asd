@@ -22,4 +22,5 @@
                (:file "standard")
                (:file "documentation"))
   :depends-on (:documentation-utils
-               :lambda-fiddle))
+               :lambda-fiddle
+               :form-fiddle))
