@@ -24,12 +24,13 @@
       a))
 
 (defmacro with-interleaving (&body body)
-  (let ((sentinel (cons NIL NIL)))
-    (loop for next = sentinel then copy
-          for form in body
-          for copy = (copy-list form)
-          do (setf (cdr (last next)) (cons copy NIL)))
-    (cadr sentinel)))
+  (let* ((root (copy-list (pop body)))
+         (current root))
+    (dolist (form body root)
+      (let ((form (copy-list form)))
+        (when form
+          (setf (cdr (last current)) (cons form NIL))
+          (setf current form))))))
 
 (defun copy-list* (list)
   (let* ((head (cons NIL NIL))
