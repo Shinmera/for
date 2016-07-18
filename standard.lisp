@@ -78,14 +78,12 @@
 (define-value-binding across (var vector &aux (i 0) (length (length vector)))
   (declare (type vector vector)
            (type (integer 0) i length))
-  (declare (dynamic-extent i length))
   `(cond ((= ,length ,i)
           (end-for))
          (T (update ,var (aref ,vector ,i))
             (incf ,i))))
 
 (define-value-binding over (var iterable &rest iterator-args &aux (iterator (apply #'make-iterator iterable iterator-args)))
-  (declare (dynamic-extent iterator))
   `(if (has-more ,iterator)
        (update ,var (next ,iterator))
        (end-for)))
@@ -98,7 +96,6 @@
 (define-value-binding table-keys (var table &aux (iterator (hash-table-iterator table)) next key val)
   (declare (type hash-table table)
            (type function iterator))
-  (declare (dynamic-extent table iterator))
   `(multiple-value-bind (,next ,key ,val) (funcall ,iterator)
      (declare (ignore ,val))
      (if ,next
@@ -108,7 +105,6 @@
 (define-value-binding table-values (var table &aux (iterator (hash-table-iterator table)) next key val)
   (declare (type hash-table table)
            (type function iterator))
-  (declare (dynamic-extent table iterator))
   `(multiple-value-bind (,next ,key ,val) (funcall ,iterator)
      (declare (ignore ,key))
      (if ,next
@@ -118,7 +114,6 @@
 (define-value-binding table-pairs (var table &aux (iterator (hash-table-iterator table)) next key val)
   (declare (type hash-table table)
            (type function iterator))
-  (declare (dynamic-extent table iterator))
   `(multiple-value-bind (,next ,key ,val) (funcall ,iterator)
      (cond (,next
             (update ,(first var) ,key)
@@ -128,7 +123,6 @@
 
 (define-value-binding symbols (var package &rest status &aux (iterator (package-iterator package (or status '(:internal :external :inherited)))) next symbol)
   (declare (type function iterator))
-  (declare (dynamic-extent package iterator))
   `(multiple-value-bind (,next ,symbol) (funcall ,iterator)
      (if ,next
          (setf ,var ,symbol)
@@ -137,7 +131,6 @@
 (define-value-binding ranging ((var (if ascending (- from by) (+ from by))) from to &key (by 1) &aux (ascending (< from to)))
   (declare (type real var from to by)
            (type boolean ascending))
-  (declare (dynamic-extent from to by ascending))
   (declare (ignore from))
   `(cond (,ascending
           (incf ,var ,by)
@@ -151,7 +144,6 @@
 (define-value-binding from ((var (if ascending (- from by) (+ from by))) from &key (to NIL to-p) (by 1) &aux (ascending (or (not to) (< from to))))
   (declare (type real var from to by)
            (type boolean ascending))
-  (declare (dynamic-extent from to by ascending))
   (declare (ignore from))
   (if to-p
       `(cond (,ascending
@@ -166,7 +158,6 @@
 
 (define-value-binding repeating ((var 0) limit)
   (declare (type (integer 0) var limit))
-  (declare (dynamic-extent limit))
   `(when (< ,limit (incf ,var))
      (end-for)))
 
@@ -176,14 +167,12 @@
 (define-accumulation-binding collecting (var form &aux (head (cons NIL NIL)) (tail head))
   (declare (type list var)
            (type cons head tail))
-  (declare (dynamic-extent head))
   `(setf ,tail (setf (cdr ,tail) (cons ,form NIL))
          ,var (cdr ,head)))
 
 (define-accumulation-binding appending (var form &aux (head (cons NIL NIL)) (tail head))
   (declare (type list var)
            (type cons head tail))
-  (declare (dynamic-extent head))
   (let ((result (gensym "RESULT"))
         (new-tail (gensym "NEW-TAIL")))
     `(let ((,result ,form))
@@ -196,7 +185,6 @@
 (define-accumulation-binding nconcing (var form &aux (head (cons NIL NIL)) (tail head))
   (declare (type list var)
            (type cons head tail))
-  (declare (dynamic-extent head))
   (let ((result (gensym "RESULT")))
     `(let ((,result ,form))
        (when ,result
