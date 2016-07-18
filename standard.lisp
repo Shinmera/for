@@ -77,7 +77,7 @@
 
 (define-value-binding across (var vector &aux (i 0) (length (length vector)))
   (declare (type vector vector)
-           (type (integer 0) vector length))
+           (type (integer 0) i length))
   (declare (dynamic-extent i length))
   `(cond ((= ,length ,i)
           (end-for))
