@@ -130,9 +130,10 @@
     (close (object iterator))))
 
 (defmethod make-iterator ((stream stream) &key (buffer-size 4096) close-stream)
-  (if (eql buffer-size :line)
-      (make-instance 'stream-line-iterator :object stream :close-stream close-stream)
-      (make-instance 'stream-iterator :object stream :buffer-size buffer-size :close-stream close-stream)))
+  (case buffer-size
+    ((:line :lines)
+     (make-instance 'stream-line-iterator :object stream :close-stream close-stream))
+    (T (make-instance 'stream-iterator :object stream :buffer-size buffer-size :close-stream close-stream))))
 
 (defclass directory-iterator (list-iterator)
   ())
