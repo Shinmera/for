@@ -117,7 +117,7 @@ Iterator classes for the following types is included in the `for-iterator` packa
 * `vector`
 * `array`
 * `stream`
-* `pathname` -- must be a wild pathname
+* `pathname`
 * `random-state`
 * `package`
 * `hash-table` each item is a list of key and value.

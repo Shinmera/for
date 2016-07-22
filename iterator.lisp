@@ -10,6 +10,7 @@
 (defgeneric next (iterator))
 (defgeneric current (iterator))
 (defgeneric (setf current) (value iterator))
+(defgeneric end (iterator))
 (defgeneric make-iterator (object &key &allow-other-keys))
 
 (defclass iterator ()
@@ -18,6 +19,8 @@
 
 (defmethod next :around ((iterator iterator))
   (setf (slot-value iterator 'current) (call-next-method)))
+
+(defmethod end ((iterator iterator)))
 
 (defclass list-iterator (iterator)
   ())
@@ -77,7 +80,8 @@
 (defclass stream-iterator (iterator)
   ((buffer :accessor buffer)
    (index :initform 1 :accessor index)
-   (limit :initform 1 :accessor limit)))
+   (limit :initform 1 :accessor limit)
+   (close-stream :initarg :close-stream :accessor close-stream)))
 
 (defmethod initialize-instance :after ((iterator stream-iterator) &key (buffer-size 4096) object)
   (setf (buffer iterator) (make-array buffer-size :element-type (stream-element-type object))))
@@ -101,8 +105,34 @@
 (defmethod (setf current) ((value sequence) (iterator stream-iterator))
   (write-sequence value (object iterator)))
 
-(defmethod make-iterator ((stream stream) &key (buffer-size 4096))
-  (make-instance 'stream-iterator :object stream :buffer-size buffer-size))
+(defmethod end ((iterator stream-iterator))
+  (when (close-stream iterator)
+    (close (object iterator))))
+
+(defclass stream-line-iterator (iterator)
+  ((buffer :initform NIL :accessor buffer)
+   (close-stream :initarg :close-stream :accessor close-stream)))
+
+(defmethod has-more ((iterator stream-line-iterator))
+  (or (buffer iterator)
+      (setf (buffer iterator) (read-line (object iterator) NIL NIL))))
+
+(defmethod next ((iterator stream-line-iterator))
+  (let ((buffer (buffer iterator)))
+    (cond (buffer
+           (setf (buffer iterator) NIL)
+           buffer)
+          (T
+           (read-line (object iterator))))))
+
+(defmethod end ((iterator stream-line-iterator))
+  (when (close-stream iterator)
+    (close (object iterator))))
+
+(defmethod make-iterator ((stream stream) &key (buffer-size 4096) close-stream)
+  (if (eql buffer-size :line)
+      (make-instance 'stream-line-iterator :object stream :close-stream close-stream)
+      (make-instance 'stream-iterator :object stream :buffer-size buffer-size :close-stream close-stream)))
 
 (defclass directory-iterator (list-iterator)
   ())
@@ -110,8 +140,10 @@
 (defmethod initialize-instance :after ((iterator directory-iterator) &key object)
   (setf (object iterator) (cons NIL (directory object))))
 
-(defmethod make-iterator ((pathname pathname) &key)
-  (make-instance 'directory-iterator :object pathname))
+(defmethod make-iterator ((pathname pathname) &key buffer-size (element-type 'character))
+  (if (wild-pathname-p pathname)
+      (make-instance 'directory-iterator :object pathname)
+      (make-iterator (open pathname :element-type element-type) :buffer-size buffer-size :close-stream T)))
 
 (defclass random-iterator (iterator)
   ((limit :initarg :limit :reader limit))

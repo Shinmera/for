@@ -309,6 +309,12 @@ Some (but not all) iterators may support setting the current element to a new va
 
 See NEXT")
 
+  (function end
+    "Ends the iterator and performs potential cleanup.
+
+You should always call this function with your iterator object once you are done to ensure
+proper termination.")
+
   (function make-iterator
     "Create an iterator object for the given type of object.")
 
@@ -366,7 +372,7 @@ See ARRAY-ITERATOR")
     "Iterator for input streams.
 
 The stream is read through a buffer, the size of which can be set via the :BUFFER-SIZE
-initarg.
+initarg. If :CLOSE-STREAM is set to non-NIL, CLOSE is performed on the stream upon END.
 
 Supports setting the \"current\" element if the stream supports writing to it of course.
 
@@ -389,6 +395,21 @@ See STREAM-ITERATOR")
     "Accessor to the amount of data that is currently filled in the buffer.
 
 See STREAM-ITERATOR")
+
+  (function close-stream
+    "Accessor to whether the stream should be closed on END call or not.
+
+See STREAM-ITERATOR
+See STREAM-LINE-ITERATOR")
+
+  (type stream-line-iterator
+    "Iterator for line based input streams.
+
+If :CLOSE-STREAM is set to non-NIL, CLOSE is performed on the stream upon END.
+
+See BUFFER
+See CLOSE-STREAM
+See ITERATOR")
 
   (type directory-iterator
     "Iterator for a DIRECTORY listing.

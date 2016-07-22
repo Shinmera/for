@@ -13,6 +13,7 @@
    #:has-more
    #:next
    #:current
+   #:end
    #:make-iterator
    #:iterator
    #:object
@@ -25,6 +26,8 @@
    #:buffer
    #:index
    #:limit
+   #:close-stream
+   #:stream-line-iterator
    #:directory-iterator
    #:random-iterator
    #:limit
