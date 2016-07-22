@@ -85,6 +85,7 @@ The following bindings are included in the `for-minimal` package:
 * `counting` / `count`
 * `from`
 * `in`
+* `lines-of`
 * `maximizing` / `maximize`
 * `minimizing` / `minimize`
 * `nconcing` / `nconc`

@@ -63,6 +63,7 @@
    #:ranging
    #:from
    #:repeating
+   #:lines-of
    #:=
    #:collecting
    #:appending

@@ -166,6 +166,21 @@
   `(when (< ,limit (incf ,var))
      (end-for)))
 
+(define-direct-binding lines-of (var pathname/stream)
+  (let ((arg (gensym "ARGUMENT"))
+        (stream (gensym "STREAM"))
+        (line (gensym "LINE")))
+    (values
+     `(with-interleaving
+        (let* ((,var NIL)
+               (,arg ,pathname/stream)
+               (,stream (etypecase ,arg
+                          ((or string pathname) (open ,arg))
+                          (stream ,arg)))))
+        (unwind-protect* (close ,stream)))
+     `(let ((,line (read-line ,stream NIL NIL)))
+        (if ,line (setf ,var ,line) (end-for))))))
+
 (define-form-binding = (var form)
   `(update ,var ,form))
 

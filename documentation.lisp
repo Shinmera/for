@@ -589,6 +589,11 @@ the variable is decreased by BY every step.")
     "Increases the var the given amount of times starting with 1.
 
 This is the same as (a between 1 n)")
+
+  (binding lines-of
+    "Iterates over the given file or stream, reading a line each time.
+
+The stream is always closed when the For loop exits.")
   
   (binding =
     "Updates the var by the value of the given form every time.
