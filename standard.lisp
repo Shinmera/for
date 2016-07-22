@@ -83,10 +83,15 @@
          (T (update ,var (aref ,vector ,i))
             (incf ,i))))
 
-(define-value-binding over (var iterable &rest iterator-args &aux (iterator (apply #'make-iterator iterable iterator-args)))
-  `(if (has-more ,iterator)
-       (update ,var (next ,iterator))
-       (end-for)))
+(define-direct-binding over (var iterable &rest iterator-args)
+  (let ((iterator (gensym "ITERATOR")))
+    (values
+     `(with-interleaving
+        (let ((,iterator (make-iterator ,iterable ,@iterator-args))))
+        (unwind-protect* (end ,iterator)))
+     `(if (has-more ,iterator)
+          (update ,var (next ,iterator))
+          (end-for)))))
 
 (define-value-symbol-macro-binding updating ((var (current iterator)) iterable &rest iterator-args &aux (iterator (apply #'make-iterator iterable iterator-args)))
   `(if (has-more ,iterator)

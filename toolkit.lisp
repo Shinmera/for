@@ -6,6 +6,10 @@
 
 (in-package #:org.shirakumo.for)
 
+(defmacro unwind-protect* (cleanup &body body)
+  `(unwind-protect (progn ,@body)
+     ,cleanup))
+
 (defmacro values* (&rest values)
   `(values-list
     (list*
