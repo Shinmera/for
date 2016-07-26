@@ -147,7 +147,8 @@
             (end-for)))))
 
 (define-value-binding from ((var (if ascending (- from by) (+ from by))) from &key (to NIL to-p) (by 1) &aux (ascending (or (not to) (< from to))))
-  (declare (type real var from to by)
+  (declare (type real var from by)
+           (type (or real null) to)
            (type boolean ascending))
   (declare (ignore from))
   (if to-p
