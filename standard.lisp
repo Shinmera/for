@@ -87,7 +87,8 @@
   (let ((iterator (gensym "ITERATOR")))
     (values
      `(with-interleaving
-        (let ((,iterator (make-iterator ,iterable ,@iterator-args))))
+        (let (,@(lambda-fiddle:extract-lambda-vars (enlist var))
+              (,iterator (make-iterator ,iterable ,@iterator-args))))
         (unwind-protect* (end ,iterator)))
      `(if (has-more ,iterator)
           (update ,var (next ,iterator))
