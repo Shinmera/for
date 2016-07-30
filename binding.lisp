@@ -87,7 +87,7 @@
                                                    `(list* 'list ,var)
                                                    var)))
                     (loop for var in aux for gen in aux-gen-gens
-                          collect `(list ,gen ,(translate-form-vars (delist var #'second) all all-gen-gens))))
+                          collect `(list ,gen ,(when (listp var) (translate-form-vars (second var) all all-gen-gens)))))
             `(loop for ,vargen in (lambda-fiddle:extract-lambda-vars (enlist ,(first var)))
                    collect (list ,vargen ,(translate-form-vars (second var) all all-gen-gens))))))
 
