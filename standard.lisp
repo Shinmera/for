@@ -232,14 +232,14 @@
   `(incf ,var ,form))
 
 (define-accumulation-binding maximizing (var form)
-  (declare (type real var))
+  (declare (type (or null real) var))
   (let ((result (gensym "RESULT")))
     `(let ((,result ,form))
        (when (or (not ,var) (< ,var ,result))
          (setf ,var ,result)))))
 
 (define-accumulation-binding minimizing (var form)
-  (declare (type real var))
+  (declare (type (or null real) var))
   (let ((result (gensym "RESULT")))
     `(let ((,result ,form))
        (when (or (not ,var) (< ,result ,var))
