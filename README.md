@@ -191,11 +191,11 @@ Iterator classes for the following types is included in the `for-iterator` packa
 ## Extending FOR
 Both bindings and clauses are defined in terms of functions that return three values:
 
-1. A surrounding form
+1. A surrounding form  
    Surrounding forms will be wrapped around the rest of the expanded for by appending the rest to it. This happens through `with-interleaving`.
-2. A loop body form
+2. A loop body form  
    The body form is put inside the loop where it will be evaluated once per iteration.
-3. A return value form
+3. A return value form  
    The return value form is evaluated on loop end. The position within the returned values is dependent on the clauses and bindings present during expansion. If not provided, no return value is generated. Note that this is distinct from having NIL as a third value.
 
 Passed to the functions are the literal arguments used in the binding or clause expression. In that way, a clause/binding function must work just like a macro would.
