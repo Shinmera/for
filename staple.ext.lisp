@@ -1,4 +1,3 @@
-(ql:quickload '(staple for))
 (in-package #:cl-user)
 
 (defclass symb-binding (staple:symb-function)
@@ -28,7 +27,5 @@
 (staple:define-simple-converter symb-binding for:binding)
 (staple:define-simple-converter symb-clause for:clause)
 
-(defun staple ()
-  (staple:generate :for
-                   :packages '(:for)
-                   :if-exists :supersede))
+(defmethod staple:system-options append ((system (eql (asdf:find-system :for))))
+  (list :packages '(:for)))
