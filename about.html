@@ -74,311 +74,224 @@
       @media (max-width: 800px){
           body{font-size: 12pt;}
       } </style> </head> <body> <header> <h1><img alt="for" src="for-logo.png"/></h1> <span class="version">1.0.0</span> <p class="description">An extensible iteration macro library.</p> </header> <main> <article id="documentation">  <div><h2>About For</h2> <p>For is a library for an extensible iteration macro. It allows you to write concise looping constructs similar to <code><a href="http://l1sp.org/cl/loop">loop</a></code> and <code>iterate</code>. Unlike loop however it is extensible and sensible, and unlike iterate it does not require code-walking and is easier to extend.</p> <h2>How To</h2> <p>Load For using ASDF or Quicklisp.</p> <pre><code>(ql:quickload :for)
-</code></pre> <p>Now we can use the <code><a href="#FOR-MINIMAL:FOR">for</a></code> macro to do iteration. Most of the constructs you know from <code><a href="http://l1sp.org/cl/loop">loop</a></code> are available with the same name in For.</p> <pre><code>(<a href="#FOR:FOR">for:for</a> ((li in (<a href="http://l1sp.org/cl/list">list</a> 1 2 3 4))
+</code></pre> <p>Now we can use the <code><a href="#FOR:FOR">for</a></code> macro to do iteration. Most of the constructs you know from <code><a href="http://l1sp.org/cl/loop">loop</a></code> are available with the same name in For.</p> <pre><code>(<a href="#FOR:FOR">for:for</a> ((li in (<a href="http://l1sp.org/cl/list">list</a> 1 2 3 4))
           (vi across #(a b c d)))
   (<a href="http://l1sp.org/cl/format">format</a> T &quot;~&amp;~a ~a&quot; li vi))
-</code></pre> <p>Unlike <code><a href="http://l1sp.org/cl/loop">loop</a></code> and <code>iterate</code>, <code><a href="#FOR-MINIMAL:FOR">for</a></code> makes a distinction between &quot;bindings&quot; and body forms. Body forms can also contain clauses:</p> <pre><code>(<a href="#FOR:FOR">for:for</a> ((li in (<a href="http://l1sp.org/cl/list">list</a> 1 2 3 4)))
-  (<a href="#FOR-MINIMAL:THEREIS">thereis</a> (<a href="http://l1sp.org/cl/evenp">evenp</a> li)))
+</code></pre> <p>In <code><a href="http://l1sp.org/cl/loop">loop</a></code> this might look as follows:</p> <pre><code>(<a href="http://l1sp.org/cl/loop">loop</a> for li in (<a href="http://l1sp.org/cl/list">list</a> 1 2 3 4)
+      for vi across #(a b c d)
+      do (<a href="http://l1sp.org/cl/format">format</a> T &quot;~&amp;~a ~a&quot; li vi))
+</code></pre> <p>Unlike <code><a href="http://l1sp.org/cl/loop">loop</a></code> and <code>iterate</code>, <code><a href="#FOR:FOR">for</a></code> makes a distinction between &quot;bindings&quot; and body forms. Body forms can also contain clauses:</p> <pre><code>(<a href="#FOR:FOR">for:for</a> ((li in (<a href="http://l1sp.org/cl/list">list</a> 1 2 3 4)))
+  (<a href="#FOR:THEREIS">thereis</a> (<a href="http://l1sp.org/cl/evenp">evenp</a> li)))
+</code></pre> <p>In <code><a href="http://l1sp.org/cl/loop">loop</a></code> this might look as follows:</p> <pre><code>(<a href="http://l1sp.org/cl/loop">loop</a> for li in (<a href="http://l1sp.org/cl/list">list</a> 1 2 3 4)
+      thereis (<a href="http://l1sp.org/cl/evenp">evenp</a> li))
 </code></pre> <p>Naturally, there's also accumulation bindings:</p> <pre><code>(<a href="#FOR:FOR">for:for</a> ((randoms collecting (<a href="http://l1sp.org/cl/random">random</a> 10)))
-  (<a href="#FOR-MINIMAL:UNTIL">until</a> (<a href="#FOR-MINIMAL:=">=</a> 10 (<a href="http://l1sp.org/cl/length">length</a> randoms))))
-</code></pre> <p>You might realise that the above is a rather inefficient way of writing the loop. Instead we can also use the <code><a href="#FOR-MINIMAL:REPEAT">repeat</a></code> binding:</p> <pre><code>(<a href="#FOR:FOR">for:for</a> ((i repeat 10)
+  (<a href="#FOR:UNTIL">until</a> (<a href="#FOR:=">=</a> 10 (<a href="http://l1sp.org/cl/length">length</a> randoms))))
+</code></pre> <p>In <code><a href="http://l1sp.org/cl/loop">loop</a></code> this might look as follows:</p> <pre><code>(<a href="http://l1sp.org/cl/loop">loop</a> collect (<a href="http://l1sp.org/cl/random">random</a> 10) into randoms
+      until (<a href="#FOR:=">=</a> 10 (<a href="http://l1sp.org/cl/length">length</a> randoms)))
+</code></pre> <p>You might realise that the above is a rather inefficient way of writing the loop. Instead we can also use the <code><a href="#FOR:REPEAT">repeat</a></code> binding:</p> <pre><code>(<a href="#FOR:FOR">for:for</a> ((i repeat 10)
           (randoms collecting (<a href="http://l1sp.org/cl/random">random</a> 10))))
+</code></pre> <p>In <code><a href="http://l1sp.org/cl/loop">loop</a></code> this might look as follows:</p> <pre><code>(<a href="http://l1sp.org/cl/loop">loop</a> repeat 10
+      collect (<a href="http://l1sp.org/cl/random">random</a> 10))
 </code></pre> <p>If we have multiple bindings or clauses that might have useful values to return, all of them are returned:</p> <pre><code>(<a href="#FOR:FOR">for:for</a> ((a over *random-state* :limit 10)
           (b collect a))
-  (<a href="#FOR-MINIMAL:THEREIS">thereis</a> (<a href="http://l1sp.org/cl/evenp">evenp</a> a)))
-</code></pre> <p>In order for short-circuiting clauses to have highest priority on values, clause-values are always returned first followed by binding values. Otherwise the order follows the declaration order of the respective clauses/bindings. Note that clauses must appear as a &quot;top-level&quot; form within the <code><a href="#FOR-MINIMAL:FOR">for</a></code> body and cannot appear as the result of a macroexpansion.</p> <p>For also features a generic iterator construct that allows you to iterate over a multitude of different data types without having to do a case-distinction by yourself. We already saw this with the <code>over *random-state*</code> binding from the previous example.</p> <pre><code>(<a href="#FOR:FOR">for:for</a> ((a over '(1 2 3))
+  (<a href="#FOR:THEREIS">thereis</a> (<a href="http://l1sp.org/cl/evenp">evenp</a> a)))
+</code></pre> <p>In <code><a href="http://l1sp.org/cl/loop">loop</a></code> this might look as follows:</p> <pre><code>(<a href="http://l1sp.org/cl/loop">loop</a> with iterator = (<a href="#FOR:MAKE-ITERATOR">for-iterator:make-iterator</a> *random-state* :limit 10)
+      while (<a href="#FOR:HAS-MORE">for-iterator:has-more</a> iterator)
+      for a = (<a href="#FOR:NEXT">for-iterator:next</a> iterator)
+      collect a into b
+      when (<a href="http://l1sp.org/cl/evenp">evenp</a> a)
+      return (<a href="http://l1sp.org/cl/values">values</a> T b))
+</code></pre> <p>In order for short-circuiting clauses to have highest priority on values, clause-values are always returned first followed by binding values. Otherwise the order follows the declaration order of the respective clauses/bindings. Note that clauses must appear as a &quot;top-level&quot; form within the <code><a href="#FOR:FOR">for</a></code> body and cannot appear as the result of a macroexpansion.</p> <p>For also features a generic iterator construct that allows you to iterate over a multitude of different data types without having to do a case-distinction by yourself. We already saw this with the <code>over *random-state*</code> binding from the previous example.</p> <pre><code>(<a href="#FOR:FOR">for:for</a> ((a over '(1 2 3))
           (b over #(a b c))
           (c over (<a href="#FOR:FOR">for:for</a> ((table as (<a href="http://l1sp.org/cl/make-hash-table">make-hash-table</a>))) 
-                    (<a href="http://l1sp.org/cl/setf">setf</a> (<a href="http://l1sp.org/cl/gethash">gethash</a> (<a href="http://l1sp.org/cl/random">random</a> 10) table) (<a href="http://l1sp.org/cl/random">random</a> 10)) (<a href="#FOR-MINIMAL:REPEAT">repeat</a> 3)))
+                    (<a href="http://l1sp.org/cl/setf">setf</a> (<a href="http://l1sp.org/cl/gethash">gethash</a> (<a href="http://l1sp.org/cl/random">random</a> 10) table) (<a href="http://l1sp.org/cl/random">random</a> 10)) (<a href="#FOR:REPEAT">repeat</a> 3)))
           (d over *package*)
           (e over *random-state*)
           (f over (<a href="http://l1sp.org/cl/directory">directory</a> (<a href="http://l1sp.org/cl/merge-pathnames">merge-pathnames</a> &quot;*.*&quot; (<a href="http://l1sp.org/cl/user-homedir-pathname">user-homedir-pathname</a>))))
           (g over (<a href="http://l1sp.org/cl/make-string-input-stream">make-string-input-stream</a> &quot;Hi!&quot;)))
   (<a href="http://l1sp.org/cl/print">print</a> (<a href="http://l1sp.org/cl/list">list</a> a b c d e f g)))
-</code></pre> <p>Some iterators also support updating the current element. If you require doing so, you can use the <code><a href="#FOR-MINIMAL:UPDATING">updating</a></code> binding.</p> <pre><code>(<a href="#FOR:FOR">for:for</a> ((list as (<a href="http://l1sp.org/cl/list">list</a> 1 2 3 4 5))
+</code></pre> <p>Note that the <code><a href="#FOR:OVER">over</a></code> iterator construct can be drastically slower than a tailored iteration construct.</p> <p>Some iterators also support updating the current element. If you require doing so, you can use the <code><a href="#FOR:UPDATING">updating</a></code> binding.</p> <pre><code>(<a href="#FOR:FOR">for:for</a> ((list as (<a href="http://l1sp.org/cl/list">list</a> 1 2 3 4 5))
           (item updating list))
   (<a href="http://l1sp.org/cl/setf">setf</a> item (<a href="http://l1sp.org/cl/expt">expt</a> item item)))
+</code></pre> <p>In <code><a href="http://l1sp.org/cl/loop">loop</a></code> this might look as follows:</p> <pre><code>(<a href="http://l1sp.org/cl/loop">loop</a> with list = (<a href="http://l1sp.org/cl/list">list</a> 1 2 3 4 5)
+      with iterator = (<a href="#FOR:MAKE-ITERATOR">for-iterator:make-iterator</a> list)
+      while (<a href="#FOR:HAS-MORE">for-iterator:has-more</a> iterator)
+      do (<a href="#FOR:NEXT">for-iterator:next</a> iterator)
+         (<a href="http://l1sp.org/cl/symbol-macrolet">symbol-macrolet</a> ((item (<a href="#FOR:CURRENT">for-iterator:current</a> iterator)))
+           (<a href="http://l1sp.org/cl/setf">setf</a> item (<a href="http://l1sp.org/cl/expt">expt</a> item item)))
+      finally (<a href="http://l1sp.org/cl/return">return</a> list))
 </code></pre> <p>Some of the bindings also support destructuring the current item by a destructuring-lambda-list.</p> <pre><code>(<a href="#FOR:FOR">for:for</a> (((type &amp;key object limit) in '((counter :limit 5)
                                          (<a href="http://l1sp.org/cl/package">package</a> :object *package*))))
   (<a href="http://l1sp.org/cl/format">format</a> T &quot;~&amp;Type: ~a~@[ Object: ~a~]~@[ Limit: ~a~]&quot; type object limit))
-</code></pre> <p>You can check a binding's or clause's documentation with <code>(<a href="http://l1sp.org/cl/documentation">documentation</a> 'in 'for:binding)</code> which will tell you whether it supports destructuring through <code><a href="#FOR-MINIMAL:UPDATE">update</a></code>.</p> <p>Sometimes you may want to iterate over multiple things in sequence rather than in parallel. For this you can use the <code><a href="#FOR-MINIMAL:BEING">being</a></code> binding, which allows you to pass a list of sub-bindings to sequentially use.</p> <pre><code>(<a href="#FOR:FOR">for:for</a> (((k v) being
-           (<a href="#FOR-MINIMAL:IN">in</a> '((駅 station) (出口 exit) (特急 express-train)))
-           (<a href="#FOR-MINIMAL:ACROSS">across</a> #((勉強 studying) (宿題 home-work) (授業 lesson) (試験 exam)))))
+</code></pre> <p>In <code><a href="http://l1sp.org/cl/loop">loop</a></code> this might look as follows:</p> <pre><code>(<a href="http://l1sp.org/cl/loop">loop</a> for list in '((counter :limit 5)
+                    (<a href="http://l1sp.org/cl/package">package</a> :object *package*))
+      do (<a href="http://l1sp.org/cl/destructuring-bind">destructuring-bind</a> (<a href="http://l1sp.org/cl/type">type</a> &amp;key object limit) list
+           (<a href="http://l1sp.org/cl/format">format</a> T &quot;~&amp;Type: ~a~@[ Object: ~a~]~@[ Limit: ~a~]&quot; type object limit)))
+</code></pre> <p>You can check a binding's or clause's documentation with <code>(<a href="http://l1sp.org/cl/documentation">documentation</a> 'in 'for:binding)</code> which will tell you whether it supports destructuring through <code><a href="#FOR:UPDATE">update</a></code>.</p> <p>Sometimes you may want to iterate over multiple things in sequence rather than in parallel. For this you can use the <code><a href="#FOR:BEING">being</a></code> binding, which allows you to pass a list of sub-bindings to sequentially use.</p> <pre><code>(<a href="#FOR:FOR">for:for</a> (((k v) being
+           (<a href="#FOR:IN">in</a> '((駅 station) (出口 exit) (特急 express-train)))
+           (<a href="#FOR:ACROSS">across</a> #((勉強 studying) (宿題 home-work) (授業 lesson) (試験 exam)))))
   (<a href="http://l1sp.org/cl/format">format</a> T &quot;~&amp;~a: ~a&quot; k v))
-</code></pre> <p>If a binding should only be updated based on a condition, there's the <code><a href="#FOR-MINIMAL:WHEN">when</a></code> and <code><a href="#FOR-MINIMAL:UNLESS">unless</a></code> bindings that defer based on a test.</p> <pre><code>(<a href="#FOR:FOR">for:for</a> ((random = (<a href="http://l1sp.org/cl/random">random</a> 10))
+</code></pre> <p>In <code><a href="http://l1sp.org/cl/loop">loop</a></code> this might look as follows:</p> <pre><code>(<a href="http://l1sp.org/cl/progn">progn</a> (<a href="http://l1sp.org/cl/loop">loop</a> for (k v) in '((駅 station) (出口 exit) (特急 express-train))
+             do (<a href="http://l1sp.org/cl/format">format</a> T &quot;~&amp;~a: ~a&quot; k v))
+       (<a href="http://l1sp.org/cl/loop">loop</a> for (k v) across #((勉強 studying) (宿題 home-work) (授業 lesson) (試験 exam))
+             do (<a href="http://l1sp.org/cl/format">format</a> T &quot;~&amp;~a: ~a&quot; k v)))
+</code></pre> <p>If a binding should only be updated based on a condition, there's the <code><a href="#FOR:WHEN">when</a></code> and <code><a href="#FOR:UNLESS">unless</a></code> bindings that defer based on a test.</p> <pre><code>(<a href="#FOR:FOR">for:for</a> ((random = (<a href="http://l1sp.org/cl/random">random</a> 10))
           (<a href="http://l1sp.org/cl/list">list</a> when (<a href="http://l1sp.org/cl/evenp">evenp</a> random) collect random))
-  (<a href="#FOR-MINIMAL:UNTIL">until</a> (<a href="#FOR-MINIMAL:=">=</a> 10 (<a href="http://l1sp.org/cl/length">length</a> list))))
-</code></pre> <p>The following bindings are included in the <code>for-minimal</code> package:</p> <ul> <li><code>=</code></li> <li><code><a href="#FOR-MINIMAL:ACROSS">across</a></code></li> <li><code><a href="#FOR-MINIMAL:APPENDING">appending</a></code> / <code><a href="#FOR-MINIMAL:APPEND">append</a></code></li> <li><code><a href="#FOR-MINIMAL:AS">as</a></code></li> <li><code><a href="#FOR-MINIMAL:BEING">being</a></code></li> <li><code><a href="#FOR-MINIMAL:COLLECTING">collecting</a></code> / <code><a href="#FOR-MINIMAL:COLLECT">collect</a></code></li> <li><code><a href="#FOR-MINIMAL:COUNTING">counting</a></code> / <code><a href="#FOR-MINIMAL:COUNT">count</a></code></li> <li><code><a href="#FOR-MINIMAL:FROM">from</a></code></li> <li><code><a href="#FOR-MINIMAL:IN">in</a></code></li> <li><code><a href="#FOR-MINIMAL:LINES-OF">lines-of</a></code></li> <li><code><a href="#FOR-MINIMAL:MAXIMIZING">maximizing</a></code> / <code><a href="#FOR-MINIMAL:MAXIMIZE">maximize</a></code></li> <li><code><a href="#FOR-MINIMAL:MINIMIZING">minimizing</a></code> / <code><a href="#FOR-MINIMAL:MINIMIZE">minimize</a></code></li> <li><code><a href="#FOR-MINIMAL:NCONCING">nconcing</a></code> / <code><a href="#FOR-MINIMAL:NCONC">nconc</a></code></li> <li><code><a href="#FOR-MINIMAL:ON">on</a></code></li> <li><code><a href="#FOR-MINIMAL:OVER">over</a></code></li> <li><code><a href="#FOR-MINIMAL:RANGING">ranging</a></code> / <code><a href="#FOR-MINIMAL:RANGE">range</a></code></li> <li><code><a href="#FOR-MINIMAL:REDUCING">reducing</a></code> / <code><a href="#FOR-MINIMAL:REDUCE">reduce</a></code></li> <li><code><a href="#FOR-MINIMAL:REPEATING">repeating</a></code> / <code><a href="#FOR-MINIMAL:REPEAT">repeat</a></code></li> <li><code><a href="#FOR-MINIMAL:SUMMING">summing</a></code> / <code><a href="#FOR-MINIMAL:SUM">sum</a></code></li> <li><code><a href="#FOR-MINIMAL:SYMBOLS">symbols</a></code></li> <li><code><a href="#FOR-MINIMAL:TABLE-KEYS">table-keys</a></code></li> <li><code><a href="#FOR-MINIMAL:TABLE-PAIRS">table-pairs</a></code></li> <li><code><a href="#FOR-MINIMAL:TABLE-VALUES">table-values</a></code></li> <li><code><a href="#FOR-MINIMAL:UNLESS">unless</a></code></li> <li><code><a href="#FOR-MINIMAL:UPDATING">updating</a></code> / <code><a href="#FOR-MINIMAL:UPDATE">update</a></code></li> <li><code><a href="#FOR-MINIMAL:WHEN">when</a></code></li> </ul> <p>The following clauses are included in the <code>for-minimal</code> package:</p> <ul> <li><code><a href="#FOR-MINIMAL:ALWAYS">always</a></code></li> <li><code><a href="#FOR-MINIMAL:NEVER">never</a></code></li> <li><code><a href="#FOR-MINIMAL:RETURNING">returning</a></code></li> <li><code><a href="#FOR-MINIMAL:THEREIS">thereis</a></code></li> <li><code><a href="#FOR-MINIMAL:UNTIL">until</a></code></li> <li><code><a href="#FOR-MINIMAL:WHILE">while</a></code></li> </ul> <p>Iterator classes for the following types is included in the <code>for-iterator</code> package:</p> <ul> <li><code><a href="http://l1sp.org/cl/list">list</a></code></li> <li><code><a href="http://l1sp.org/cl/vector">vector</a></code></li> <li><code><a href="http://l1sp.org/cl/array">array</a></code></li> <li><code><a href="http://l1sp.org/cl/stream">stream</a></code></li> <li><code><a href="http://l1sp.org/cl/pathname">pathname</a></code></li> <li><code><a href="http://l1sp.org/cl/random-state">random-state</a></code></li> <li><code><a href="http://l1sp.org/cl/package">package</a></code></li> <li><code><a href="http://l1sp.org/cl/hash-table">hash-table</a></code> each item is a list of key and value.</li> </ul> <h2>Extending FOR</h2> <p>Both bindings and clauses are defined in terms of functions that return three values:</p> <ol> <li>A surrounding form
+  (<a href="#FOR:UNTIL">until</a> (<a href="#FOR:=">=</a> 10 (<a href="http://l1sp.org/cl/length">length</a> list))))
+</code></pre> <p>In <code><a href="http://l1sp.org/cl/loop">loop</a></code> this might look as follows:</p> <pre><code>(<a href="http://l1sp.org/cl/loop">loop</a> with list = ()
+      for random = (<a href="http://l1sp.org/cl/random">random</a> 10)
+      when (<a href="http://l1sp.org/cl/evenp">evenp</a> random)
+      do (<a href="http://l1sp.org/cl/push">push</a> random list)
+      until (<a href="#FOR:=">=</a> 10 (<a href="http://l1sp.org/cl/length">length</a> list))
+      finally (<a href="http://l1sp.org/cl/return">return</a> (<a href="http://l1sp.org/cl/nreverse">nreverse</a> list)))
+</code></pre> <p>The following bindings are included in the <code>for-minimal</code> package:</p> <ul> <li><code>=</code></li> <li><code><a href="#FOR:ACROSS">across</a></code></li> <li><code><a href="#FOR:APPENDING">appending</a></code> / <code><a href="#FOR:APPEND">append</a></code></li> <li><code><a href="#FOR:AS">as</a></code></li> <li><code><a href="#FOR:BEING">being</a></code></li> <li><code><a href="#FOR:COLLECTING">collecting</a></code> / <code><a href="#FOR:COLLECT">collect</a></code></li> <li><code><a href="#FOR:COUNTING">counting</a></code> / <code><a href="#FOR:COUNT">count</a></code></li> <li><code><a href="#FOR:FROM">from</a></code></li> <li><code><a href="#FOR:IN">in</a></code></li> <li><code><a href="#FOR:LINES-OF">lines-of</a></code></li> <li><code><a href="#FOR:MAXIMIZING">maximizing</a></code> / <code><a href="#FOR:MAXIMIZE">maximize</a></code></li> <li><code><a href="#FOR:MINIMIZING">minimizing</a></code> / <code><a href="#FOR:MINIMIZE">minimize</a></code></li> <li><code><a href="#FOR:NCONCING">nconcing</a></code> / <code><a href="#FOR:NCONC">nconc</a></code></li> <li><code><a href="#FOR:ON">on</a></code></li> <li><code><a href="#FOR:OVER">over</a></code></li> <li><code><a href="#FOR:RANGING">ranging</a></code> / <code><a href="#FOR:RANGE">range</a></code></li> <li><code><a href="#FOR:REDUCING">reducing</a></code> / <code><a href="#FOR:REDUCE">reduce</a></code></li> <li><code><a href="#FOR:REPEATING">repeating</a></code> / <code><a href="#FOR:REPEAT">repeat</a></code></li> <li><code><a href="#FOR:SUMMING">summing</a></code> / <code><a href="#FOR:SUM">sum</a></code></li> <li><code><a href="#FOR:SYMBOLS">symbols</a></code></li> <li><code><a href="#FOR:TABLE-KEYS">table-keys</a></code></li> <li><code><a href="#FOR:TABLE-PAIRS">table-pairs</a></code></li> <li><code><a href="#FOR:TABLE-VALUES">table-values</a></code></li> <li><code><a href="#FOR:UNLESS">unless</a></code></li> <li><code><a href="#FOR:UPDATING">updating</a></code> / <code><a href="#FOR:UPDATE">update</a></code></li> <li><code><a href="#FOR:WHEN">when</a></code></li> </ul> <p>The following clauses are included in the <code>for-minimal</code> package:</p> <ul> <li><code><a href="#FOR:ALWAYS">always</a></code></li> <li><code><a href="#FOR:NEVER">never</a></code></li> <li><code><a href="#FOR:RETURNING">returning</a></code></li> <li><code><a href="#FOR:THEREIS">thereis</a></code></li> <li><code><a href="#FOR:UNTIL">until</a></code></li> <li><code><a href="#FOR:WHILE">while</a></code></li> </ul> <p>Iterator classes for the following types is included in the <code>for-iterator</code> package:</p> <ul> <li><code><a href="http://l1sp.org/cl/list">list</a></code></li> <li><code><a href="http://l1sp.org/cl/vector">vector</a></code></li> <li><code><a href="http://l1sp.org/cl/array">array</a></code></li> <li><code><a href="http://l1sp.org/cl/stream">stream</a></code></li> <li><code><a href="http://l1sp.org/cl/pathname">pathname</a></code></li> <li><code><a href="http://l1sp.org/cl/random-state">random-state</a></code></li> <li><code><a href="http://l1sp.org/cl/package">package</a></code></li> <li><code><a href="http://l1sp.org/cl/hash-table">hash-table</a></code> each item is a list of key and value.</li> </ul> <h2>Extending FOR</h2> <p>Both bindings and clauses are defined in terms of functions that return three values:</p> <ol> <li>A surrounding form
    Surrounding forms will be wrapped around the rest of the expanded for by appending the rest to it. This happens through <code><a href="#FOR:WITH-INTERLEAVING">with-interleaving</a></code>.</li> <li>A loop body form
    The body form is put inside the loop where it will be evaluated once per iteration.</li> <li>A return value form
    The return value form is evaluated on loop end. The position within the returned values is dependent on the clauses and bindings present during expansion. If not provided, no return value is generated. Note that this is distinct from having NIL as a third value.</li> </ol> <p>Passed to the functions are the literal arguments used in the binding or clause expression. In that way, a clause/binding function must work just like a macro would.</p> <h3>Bindings</h3> <p>The most primitive way to define bindings is through the <code><a href="#FOR:DEFINE-DIRECT-BINDING">define-direct-binding</a></code> macro. This defines a verbatim binding function as described above. Note that the loop body forms of bindings will always be evaluated before the proper for body. </p> <p>In most cases you will want the arguments that are passed to the binding to be evaluated only once, before the loop starts properly. The <code><a href="#FOR:DEFINE-VALUE-BINDING">define-value-binding</a></code> macro will help you with that. Each argument you specify will be bound to a gensym within the definition body, and is automatically expanded to a variable with the value that is used in the binding. <code><a href="http://l1sp.org/cl/&amp;aux">&amp;aux</a></code> arguments receive special treatment as they are expanded like regular variables and thus allow you to easily define helper variables necessary during iteration.</p> <p>Let's look at an example binding definition:</p> <pre><code>(<a href="#FOR:DEFINE-VALUE-BINDING">define-value-binding</a> across (var vector &amp;aux (i -1) (<a href="http://l1sp.org/cl/length">length</a> (<a href="http://l1sp.org/cl/length">length</a> vector)))
-  `(<a href="http://l1sp.org/cl/if">if</a> (<a href="#FOR-MINIMAL:=">=</a> ,length (<a href="http://l1sp.org/cl/incf">incf</a> ,i))
-       (<a href="#FOR-MINIMAL:END-FOR">end-for</a>)
-       (<a href="#FOR-MINIMAL:UPDATE">update</a> ,var (<a href="http://l1sp.org/cl/aref">aref</a> ,vector ,i))))
-</code></pre> <p>Expanding a simple call <code>(<a href="#FOR-MINIMAL:FOR">for</a> ((a across vec)))</code> results in this expansion (after cleaning it up a little):</p> <pre><code>(<a href="http://l1sp.org/cl/let*">LET*</a> ((#:VECTOR VEC)
+  `(<a href="http://l1sp.org/cl/if">if</a> (<a href="#FOR:=">=</a> ,length (<a href="http://l1sp.org/cl/incf">incf</a> ,i))
+       (<a href="#FOR:END-FOR">end-for</a>)
+       (<a href="#FOR:UPDATE">update</a> ,var (<a href="http://l1sp.org/cl/aref">aref</a> ,vector ,i))))
+</code></pre> <p>Expanding a simple call <code>(<a href="#FOR:FOR">for</a> ((a across vec)))</code> results in this expansion (after cleaning it up a little):</p> <pre><code>(<a href="http://l1sp.org/cl/let*">LET*</a> ((#:VECTOR VEC)
        (#:I -1)
        (#:LENGTH (<a href="http://l1sp.org/cl/length">LENGTH</a> #:VECTOR))
        (A NIL))
   (WITH-FOR-BODY
-    (<a href="http://l1sp.org/cl/if">IF</a> (<a href="#FOR-MINIMAL:=">=</a> #:LENGTH (<a href="http://l1sp.org/cl/incf">INCF</a> #:I))
-        (<a href="#FOR-MINIMAL:END-FOR">END-FOR</a>)
-        (<a href="#FOR-MINIMAL:UPDATE">UPDATE</a> A (<a href="http://l1sp.org/cl/aref">AREF</a> #:VECTOR #:I))))
+    (<a href="http://l1sp.org/cl/if">IF</a> (<a href="#FOR:=">=</a> #:LENGTH (<a href="http://l1sp.org/cl/incf">INCF</a> #:I))
+        (<a href="#FOR:END-FOR">END-FOR</a>)
+        (<a href="#FOR:UPDATE">UPDATE</a> A (<a href="http://l1sp.org/cl/aref">AREF</a> #:VECTOR #:I))))
 </code></pre> <p>As you can see, our only argument, <code><a href="http://l1sp.org/cl/vector">vector</a></code> got expanded into a gensym-ed variable that is bound to the result of the <code><a href="http://l1sp.org/cl/vector">vector</a></code> argument. Our auxiliary variables received similar treatment. Note that references to other arguments automatically get translated to their proper gensyms.</p> <p>In some cases however you'd like to re-evaluate an argument each iteration. To get this behaviour, you can use <code><a href="#FOR:DEFINE-FORM-BINDING">define-form-binding</a></code>. Here's a simple example:</p> <pre><code> (<a href="#FOR:DEFINE-FORM-BINDING">define-form-binding</a> = (var form)
-   `(<a href="#FOR-MINIMAL:UPDATE">update</a> ,var ,form))
-</code></pre> <p>Expanding a simple call <code>(<a href="#FOR-MINIMAL:FOR">for</a> ((a = (<a href="http://l1sp.org/cl/*">*</a> 2 2))))</code> presents us with:</p> <pre><code> (<a href="http://l1sp.org/cl/let*">LET*</a> ((A NIL))
+   `(<a href="#FOR:UPDATE">update</a> ,var ,form))
+</code></pre> <p>Expanding a simple call <code>(<a href="#FOR:FOR">for</a> ((a = (<a href="http://l1sp.org/cl/*">*</a> 2 2))))</code> presents us with:</p> <pre><code> (<a href="http://l1sp.org/cl/let*">LET*</a> ((A NIL))
    (WITH-FOR-BODY
-     (<a href="#FOR-MINIMAL:UPDATE">UPDATE</a> A (<a href="http://l1sp.org/cl/*">*</a> 2 2)))
-</code></pre> <p>Usually you will want form bindings if you want to accumulate the results of it over time in some manner. In that case you usually also want to return the result of the accumulation once you're done. <code>define-accumulation-binding</code> does exactly that. One note about form bindings is that the auxiliary variables still act the same as in the value bindings-- they automatically get expanded to bindings in the resulting loop construct.</p> <p>Let's look at an example that shows both:</p> <pre><code>(define-accumulation-binding collecting (var form &amp;aux (head (<a href="http://l1sp.org/cl/cons">cons</a> NIL NIL)) (tail head))
+     (<a href="#FOR:UPDATE">UPDATE</a> A (<a href="http://l1sp.org/cl/*">*</a> 2 2)))
+</code></pre> <p>Usually you will want form bindings if you want to accumulate the results of it over time in some manner. In that case you usually also want to return the result of the accumulation once you're done. <code><a href="#FOR:DEFINE-ACCUMULATION-BINDING">define-accumulation-binding</a></code> does exactly that. One note about form bindings is that the auxiliary variables still act the same as in the value bindings-- they automatically get expanded to bindings in the resulting loop construct.</p> <p>Let's look at an example that shows both:</p> <pre><code>(<a href="#FOR:DEFINE-ACCUMULATION-BINDING">define-accumulation-binding</a> collecting (var form &amp;aux (head (<a href="http://l1sp.org/cl/cons">cons</a> NIL NIL)) (tail head))
   `(<a href="http://l1sp.org/cl/setf">setf</a> ,tail (<a href="http://l1sp.org/cl/setf">setf</a> (<a href="http://l1sp.org/cl/cdr">cdr</a> ,tail) (<a href="http://l1sp.org/cl/cons">cons</a> ,form NIL))
          ,var (<a href="http://l1sp.org/cl/cdr">cdr</a> ,head)))
-</code></pre> <p>Expanding <code>(<a href="#FOR-MINIMAL:FOR">for</a> ((a collecting 2)))</code> results in:</p> <pre><code>(<a href="http://l1sp.org/cl/let*">LET*</a> ((#:HEAD (<a href="http://l1sp.org/cl/cons">CONS</a> NIL NIL)) (#:TAIL #:HEAD) (A NIL))
+</code></pre> <p>Expanding <code>(<a href="#FOR:FOR">for</a> ((a collecting 2)))</code> results in:</p> <pre><code>(<a href="http://l1sp.org/cl/let*">LET*</a> ((#:HEAD (<a href="http://l1sp.org/cl/cons">CONS</a> NIL NIL)) (#:TAIL #:HEAD) (A NIL))
   (WITH-FOR-BODY
    (<a href="http://l1sp.org/cl/setf">SETF</a> #:TAIL (<a href="http://l1sp.org/cl/setf">SETF</a> (<a href="http://l1sp.org/cl/cdr">CDR</a> #:TAIL) (<a href="http://l1sp.org/cl/cons">CONS</a> 2 NIL))
          A (<a href="http://l1sp.org/cl/cdr">CDR</a> #:HEAD))
-   (<a href="#FOR-MINIMAL:RETURN-FOR">RETURN-FOR</a> A))
-</code></pre> <p>As before, the auxiliary arguments got expanded to variable bindings with their respective default values.</p> <p>Finally we have two variants of form and value bindings, <code><a href="#FOR:DEFINE-FORM-SYMBOL-MACRO-BINDING">define-form-symbol-macro-binding</a></code> and <code><a href="#FOR:DEFINE-VALUE-SYMBOL-MACRO-BINDING">define-value-symbol-macro-binding</a></code>. The difference to the previous definition forms here is that the <code>var</code> is not bound as a variable, but instead as a symbol macro. Its default value is the symbol-macro expansion. This is useful if you want to provide an updateable place as the iteration var, as is the case with the <code><a href="#FOR-MINIMAL:UPDATING">updating</a></code> binding.</p> <h3>Clauses</h3> <p>Clauses work the exact same as bindings in terms of the base function, which you can define with <code>define-direct-clause</code>. Unlike bindings however, clauses simply get the body of their call as arguments, without an iteration var.</p> <p>In order to ease things a bit there is also <code>define-simple-clause</code> which provides the same handling for arguments as <code><a href="#FOR:DEFINE-FORM-BINDING">define-form-binding</a></code> does.</p> <p>One thing to note is that the surrounding forms of clauses always appear deeper than those of bindings and that the result value forms of clauses always appear before those of bindings. The loop body form of a clause appears at the exact position in the body where the clause expression previously appeared.</p> <h3>Iterators</h3> <p>In order to provide the generic <code><a href="#FOR-MINIMAL:OVER">over</a></code> iteration construct, For includes a protocol to define iterators. In order for an iterator to work, it has to subclass <code><a href="#FOR-ITERATOR:ITERATOR">iterator</a></code> and provide three methods: <code><a href="#FOR-ITERATOR:MAKE-ITERATOR">make-iterator</a></code>, <code><a href="#FOR-ITERATOR:HAS-MORE">has-more</a></code>, and <code><a href="#FOR-ITERATOR:NEXT">next</a></code>. The first is merely there so that we can dispatch on the type of object we'd like to iterate over and construct an appropriate iterator for it. The second should return a generalised boolean that tells us whether we can safely call <code><a href="#FOR-ITERATOR:NEXT">next</a></code>. Finally, <code><a href="#FOR-ITERATOR:NEXT">next</a></code> itself advances the iterator and returns a new element. If sensible and possible, a method on <code>(<a href="http://l1sp.org/cl/setf">setf</a> current)</code> can also be provided to allow updating the current element to a new value.</p> <p>Let's look at the list iterator as an example:</p> <pre><code>(<a href="http://l1sp.org/cl/defclass">defclass</a> list-iterator (<a href="#FOR-ITERATOR:ITERATOR">iterator</a>)
+   (<a href="#FOR:RETURN-FOR">RETURN-FOR</a> A))
+</code></pre> <p>As before, the auxiliary arguments got expanded to variable bindings with their respective default values.</p> <p>Finally we have two variants of form and value bindings, <code><a href="#FOR:DEFINE-FORM-SYMBOL-MACRO-BINDING">define-form-symbol-macro-binding</a></code> and <code><a href="#FOR:DEFINE-VALUE-SYMBOL-MACRO-BINDING">define-value-symbol-macro-binding</a></code>. The difference to the previous definition forms here is that the <code>var</code> is not bound as a variable, but instead as a symbol macro. Its default value is the symbol-macro expansion. This is useful if you want to provide an updateable place as the iteration var, as is the case with the <code><a href="#FOR:UPDATING">updating</a></code> binding.</p> <h3>Clauses</h3> <p>Clauses work the exact same as bindings in terms of the base function, which you can define with <code>define-direct-clause</code>. Unlike bindings however, clauses simply get the body of their call as arguments, without an iteration var.</p> <p>In order to ease things a bit there is also <code>define-simple-clause</code> which provides the same handling for arguments as <code><a href="#FOR:DEFINE-FORM-BINDING">define-form-binding</a></code> does.</p> <p>One thing to note is that the surrounding forms of clauses always appear deeper than those of bindings and that the result value forms of clauses always appear before those of bindings. The loop body form of a clause appears at the exact position in the body where the clause expression previously appeared.</p> <h3>Iterators</h3> <p>In order to provide the generic <code><a href="#FOR:OVER">over</a></code> iteration construct, For includes a protocol to define iterators. In order for an iterator to work, it has to subclass <code><a href="#FOR:ITERATOR">iterator</a></code> and provide three methods: <code><a href="#FOR:MAKE-ITERATOR">make-iterator</a></code>, <code><a href="#FOR:HAS-MORE">has-more</a></code>, and <code><a href="#FOR:NEXT">next</a></code>. The first is merely there so that we can dispatch on the type of object we'd like to iterate over and construct an appropriate iterator for it. The second should return a generalised boolean that tells us whether we can safely call <code><a href="#FOR:NEXT">next</a></code>. Finally, <code><a href="#FOR:NEXT">next</a></code> itself advances the iterator and returns a new element. If sensible and possible, a method on <code>(<a href="http://l1sp.org/cl/setf">setf</a> current)</code> can also be provided to allow updating the current element to a new value.</p> <p>Let's look at the list iterator as an example:</p> <pre><code>(<a href="http://l1sp.org/cl/defclass">defclass</a> list-iterator (<a href="#FOR:ITERATOR">iterator</a>)
   ())
 
 (<a href="http://l1sp.org/cl/defmethod">defmethod</a> initialize-instance :after ((iterator list-iterator) &amp;key object)
-  (<a href="http://l1sp.org/cl/setf">setf</a> (<a href="#FOR-ITERATOR:OBJECT">object</a> iterator) (<a href="http://l1sp.org/cl/cons">cons</a> NIL object)))
+  (<a href="http://l1sp.org/cl/setf">setf</a> (<a href="#FOR:OBJECT">object</a> iterator) (<a href="http://l1sp.org/cl/cons">cons</a> NIL object)))
 
 (<a href="http://l1sp.org/cl/defmethod">defmethod</a> has-more ((iterator list-iterator))
-  (<a href="http://l1sp.org/cl/cdr">cdr</a> (<a href="#FOR-ITERATOR:OBJECT">object</a> iterator)))
+  (<a href="http://l1sp.org/cl/cdr">cdr</a> (<a href="#FOR:OBJECT">object</a> iterator)))
 
 (<a href="http://l1sp.org/cl/defmethod">defmethod</a> next ((iterator list-iterator))
-  (<a href="http://l1sp.org/cl/setf">setf</a> (<a href="#FOR-ITERATOR:OBJECT">object</a> iterator) (<a href="http://l1sp.org/cl/cdr">cdr</a> (<a href="#FOR-ITERATOR:OBJECT">object</a> iterator)))
-  (<a href="http://l1sp.org/cl/car">car</a> (<a href="#FOR-ITERATOR:OBJECT">object</a> iterator)))
+  (<a href="http://l1sp.org/cl/setf">setf</a> (<a href="#FOR:OBJECT">object</a> iterator) (<a href="http://l1sp.org/cl/cdr">cdr</a> (<a href="#FOR:OBJECT">object</a> iterator)))
+  (<a href="http://l1sp.org/cl/car">car</a> (<a href="#FOR:OBJECT">object</a> iterator)))
 
-(<a href="http://l1sp.org/cl/defmethod">defmethod</a> (<a href="http://l1sp.org/cl/setf">setf</a> current) (value (<a href="#FOR-ITERATOR:ITERATOR">iterator</a> list-iterator))
-  (<a href="http://l1sp.org/cl/setf">setf</a> (<a href="http://l1sp.org/cl/car">car</a> (<a href="#FOR-ITERATOR:OBJECT">object</a> iterator)) value))
+(<a href="http://l1sp.org/cl/defmethod">defmethod</a> (<a href="http://l1sp.org/cl/setf">setf</a> current) (value (<a href="#FOR:ITERATOR">iterator</a> list-iterator))
+  (<a href="http://l1sp.org/cl/setf">setf</a> (<a href="http://l1sp.org/cl/car">car</a> (<a href="#FOR:OBJECT">object</a> iterator)) value))
 
 (<a href="http://l1sp.org/cl/defmethod">defmethod</a> make-iterator ((list list) &amp;key)
   (<a href="http://l1sp.org/cl/make-instance">make-instance</a> 'list-iterator :object list))
-</code></pre> <p>First we subclass <code><a href="#FOR-ITERATOR:ITERATOR">iterator</a></code>. Next we define an initialize method in order to prepend a cons to the list. We do this so that we know the next element will always be in the cadr of the <code><a href="#FOR-ITERATOR:OBJECT">object</a></code> and we can still set the car of the current cons cell to update it. The <code><a href="#FOR-ITERATOR:HAS-MORE">has-more</a></code> test is implemented accordingly. On <code><a href="#FOR-ITERATOR:NEXT">next</a></code> we then simply pop off the first cons and return our new current element. The <code>(<a href="http://l1sp.org/cl/setf">setf</a> current)</code> can then just update the car of the <code><a href="#FOR-ITERATOR:OBJECT">object</a></code>. Finally we need a <code><a href="#FOR-ITERATOR:MAKE-ITERATOR">make-iterator</a></code> method to dispatch on lists.</p> </div>  </article> <article id="copyright">  <h2>Copyright</h2> <span>for</span> is licensed under the <span><a href="https://tldrlegal.com/search?q=Artistic">Artistic</a></span> license.  © <span>Nicolas Hafner &lt;shinmera@tymoon.eu&gt;</span> .  This library can be obtained on <a href="https://github.com/Shinmera/for">https://github.com/Shinmera/for</a>.  </article>  <article id="symbol-index"> <h2>Package Index</h2> <ul><li class="package"> <h3> <a name="FOR-ITERATOR" href="#FOR-ITERATOR">FOR-ITERATOR</a> <span class="nicknames">(ORG.SHIRAKUMO.FOR.ITERATOR)</span> </h3> <ul><li> <a name="FOR-ITERATOR:ARRAY-ITERATOR"> </a> <article> <header class="class"> <span class="type">class</span>  <h4 class="name"><code><a href="#FOR-ITERATOR:ARRAY-ITERATOR">ARRAY-ITERATOR</a></code></h4>  </header> <div class="docstring"><pre>Iterator for general arrays.
+</code></pre> <p>First we subclass <code><a href="#FOR:ITERATOR">iterator</a></code>. Next we define an initialize method in order to prepend a cons to the list. We do this so that we know the next element will always be in the cadr of the <code><a href="#FOR:OBJECT">object</a></code> and we can still set the car of the current cons cell to update it. The <code><a href="#FOR:HAS-MORE">has-more</a></code> test is implemented accordingly. On <code><a href="#FOR:NEXT">next</a></code> we then simply pop off the first cons and return our new current element. The <code>(<a href="http://l1sp.org/cl/setf">setf</a> current)</code> can then just update the car of the <code><a href="#FOR:OBJECT">object</a></code>. Finally we need a <code><a href="#FOR:MAKE-ITERATOR">make-iterator</a></code> method to dispatch on lists.</p> </div>  </article> <article id="copyright">  <h2>Copyright</h2> <span>for</span> is licensed under the <span><a href="https://tldrlegal.com/search?q=Artistic">Artistic</a></span> license.  © <span>Nicolas Hafner &lt;shinmera@tymoon.eu&gt;</span> .  This library can be obtained on <a href="https://github.com/Shinmera/for">https://github.com/Shinmera/for</a>.  </article>  <article id="symbol-index"> <h2>Package Index</h2> <ul><li class="package"> <h3> <a name="FOR" href="#FOR">FOR</a> <span class="nicknames">(ORG.SHIRAKUMO.FOR)</span> </h3> <ul><li> <a name="FOR:ARRAY-ITERATOR"> </a> <article> <header class="class"> <span class="type">class</span>  <h4 class="name"><code><a href="#FOR:ARRAY-ITERATOR">ARRAY-ITERATOR</a></code></h4>  </header> <div class="docstring"><pre>Iterator for general arrays.
 
 Iteration is in row-major order.
 
 Supports setting the current element.
 
-See <a href="#FOR-ITERATOR:VECTOR-ITERATOR">VECTOR-ITERATOR</a>
-See <a href="#FOR-ITERATOR:TOTAL-LENGTH">TOTAL-LENGTH</a></pre></div> </article> </li><li> <a name="FOR-ITERATOR:DIRECTORY-ITERATOR"> </a> <article> <header class="class"> <span class="type">class</span>  <h4 class="name"><code><a href="#FOR-ITERATOR:DIRECTORY-ITERATOR">DIRECTORY-ITERATOR</a></code></h4>  </header> <div class="docstring"><pre>Iterator for a DIRECTORY listing.
+See <a href="#FOR:VECTOR-ITERATOR">VECTOR-ITERATOR</a>
+See <a href="#FOR:TOTAL-LENGTH">TOTAL-LENGTH</a></pre></div> </article> </li><li> <a name="FOR:DIRECTORY-ITERATOR"> </a> <article> <header class="class"> <span class="type">class</span>  <h4 class="name"><code><a href="#FOR:DIRECTORY-ITERATOR">DIRECTORY-ITERATOR</a></code></h4>  </header> <div class="docstring"><pre>Iterator for a DIRECTORY listing.
 
 On construction, this performs a simple DIRECTORY call on the given object
 and then iterates over the result list of pathnames. Thus, the pathname must
 be wild.
 
-See <a href="#FOR-ITERATOR:LIST-ITERATOR">LIST-ITERATOR</a></pre></div> </article> </li><li> <a name="FOR-ITERATOR:HASH-TABLE-ITERATOR"> </a> <article> <header class="class"> <span class="type">class</span>  <h4 class="name"><code><a href="#FOR-ITERATOR:HASH-TABLE-ITERATOR">HASH-TABLE-ITERATOR</a></code></h4>  </header> <div class="docstring"><i>No docstring provided.</i></div> </article> </li><li> <a name="FOR-ITERATOR:ITERATOR"> </a> <article> <header class="class"> <span class="type">class</span>  <h4 class="name"><code><a href="#FOR-ITERATOR:ITERATOR">ITERATOR</a></code></h4>  </header> <div class="docstring"><pre>An iterator is responsible for iterating over a given data structure.
+See <a href="#FOR:LIST-ITERATOR">LIST-ITERATOR</a></pre></div> </article> </li><li> <a name="FOR:HASH-TABLE-ITERATOR"> </a> <article> <header class="class"> <span class="type">class</span>  <h4 class="name"><code><a href="#FOR:HASH-TABLE-ITERATOR">HASH-TABLE-ITERATOR</a></code></h4>  </header> <div class="docstring"><pre>Iterator for the key/value pairs in a package.
 
-See <a href="#FOR-ITERATOR:HAS-MORE">HAS-MORE</a>
-See <a href="#FOR-ITERATOR:NEXT">NEXT</a>
-See <a href="#FOR-ITERATOR:CURRENT">CURRENT</a>
-See <a href="#FOR-ITERATOR:MAKE-ITERATOR">MAKE-ITERATOR</a>
-See <a href="#FOR-ITERATOR:OBJECT">OBJECT</a></pre></div> </article> </li><li> <a name="FOR-ITERATOR:LIST-ITERATOR"> </a> <article> <header class="class"> <span class="type">class</span>  <h4 class="name"><code><a href="#FOR-ITERATOR:LIST-ITERATOR">LIST-ITERATOR</a></code></h4>  </header> <div class="docstring"><pre>Iterator for proper lists.
+Each value returned by this iterator's CURRENT/NEXT is always a list of two values, the
+respective key and its value.
 
 Supports setting the current element.
 
-See <a href="#FOR-ITERATOR:ITERATOR">ITERATOR</a></pre></div> </article> </li><li> <a name="FOR-ITERATOR:PACKAGE-ITERATOR"> </a> <article> <header class="class"> <span class="type">class</span>  <h4 class="name"><code><a href="#FOR-ITERATOR:PACKAGE-ITERATOR">PACKAGE-ITERATOR</a></code></h4>  </header> <div class="docstring"><pre>Iterator for the symbols in a package.
+See <a href="#FOR:PREFETCH">PREFETCH</a>
+See <a href="#FOR:ITERATOR">ITERATOR</a></pre></div> </article> </li><li> <a name="FOR:ITERATOR"> </a> <article> <header class="class"> <span class="type">class</span>  <h4 class="name"><code><a href="#FOR:ITERATOR">ITERATOR</a></code></h4>  </header> <div class="docstring"><pre>An iterator is responsible for iterating over a given data structure.
+
+See <a href="#FOR:HAS-MORE">HAS-MORE</a>
+See <a href="#FOR:NEXT">NEXT</a>
+See <a href="#FOR:CURRENT">CURRENT</a>
+See <a href="#FOR:MAKE-ITERATOR">MAKE-ITERATOR</a>
+See <a href="#FOR:OBJECT">OBJECT</a></pre></div> </article> </li><li> <a name="FOR:LIST-ITERATOR"> </a> <article> <header class="class"> <span class="type">class</span>  <h4 class="name"><code><a href="#FOR:LIST-ITERATOR">LIST-ITERATOR</a></code></h4>  </header> <div class="docstring"><pre>Iterator for proper lists.
+
+Supports setting the current element.
+
+See <a href="#FOR:ITERATOR">ITERATOR</a></pre></div> </article> </li><li> <a name="FOR:PACKAGE-ITERATOR"> </a> <article> <header class="class"> <span class="type">class</span>  <h4 class="name"><code><a href="#FOR:PACKAGE-ITERATOR">PACKAGE-ITERATOR</a></code></h4>  </header> <div class="docstring"><pre>Iterator for the symbols in a package.
 
 The type of symbols that are iterated can be set through the :STATUS initarg, which must
 be a list containing any of the following keywords: :INTERNAL :EXTERNAL :INHERITED
 
-See <a href="#FOR-ITERATOR:PREFETCH">PREFETCH</a>
-See <a href="#FOR-ITERATOR:ITERATOR">ITERATOR</a></pre></div> </article> </li><li> <a name="FOR-ITERATOR:RANDOM-ITERATOR"> </a> <article> <header class="class"> <span class="type">class</span>  <h4 class="name"><code><a href="#FOR-ITERATOR:RANDOM-ITERATOR">RANDOM-ITERATOR</a></code></h4>  </header> <div class="docstring"><pre>Iterator for random numbers.
+See <a href="#FOR:PREFETCH">PREFETCH</a>
+See <a href="#FOR:ITERATOR">ITERATOR</a></pre></div> </article> </li><li> <a name="FOR:RANDOM-ITERATOR"> </a> <article> <header class="class"> <span class="type">class</span>  <h4 class="name"><code><a href="#FOR:RANDOM-ITERATOR">RANDOM-ITERATOR</a></code></h4>  </header> <div class="docstring"><pre>Iterator for random numbers.
 
 This iterator can be constructed through a RANDOM-STATE object. The argument for RANDOM
 that determines its limit can be passed through the :LIMIT initarg.
 
-See <a href="#FOR-ITERATOR:ITERATOR">ITERATOR</a></pre></div> </article> </li><li> <a name="FOR-ITERATOR:STREAM-ITERATOR"> </a> <article> <header class="class"> <span class="type">class</span>  <h4 class="name"><code><a href="#FOR-ITERATOR:STREAM-ITERATOR">STREAM-ITERATOR</a></code></h4>  </header> <div class="docstring"><pre>Iterator for input streams.
+See <a href="#FOR:ITERATOR">ITERATOR</a></pre></div> </article> </li><li> <a name="FOR:STREAM-ITERATOR"> </a> <article> <header class="class"> <span class="type">class</span>  <h4 class="name"><code><a href="#FOR:STREAM-ITERATOR">STREAM-ITERATOR</a></code></h4>  </header> <div class="docstring"><pre>Iterator for input streams.
 
 The stream is read through a buffer, the size of which can be set via the :BUFFER-SIZE
 initarg. If :CLOSE-STREAM is set to non-NIL, CLOSE is performed on the stream upon END.
 
 Supports setting the &quot;current&quot; element if the stream supports writing to it of course.
 
-See <a href="#FOR-ITERATOR:BUFFER">BUFFER</a>
-See <a href="#FOR-ITERATOR:INDEX">INDEX</a>
-See <a href="#FOR-ITERATOR:LIMIT">LIMIT</a>
-See <a href="#FOR-ITERATOR:ITERATOR">ITERATOR</a></pre></div> </article> </li><li> <a name="FOR-ITERATOR:STREAM-LINE-ITERATOR"> </a> <article> <header class="class"> <span class="type">class</span>  <h4 class="name"><code><a href="#FOR-ITERATOR:STREAM-LINE-ITERATOR">STREAM-LINE-ITERATOR</a></code></h4>  </header> <div class="docstring"><pre>Iterator for line based input streams.
+See <a href="#FOR:BUFFER">BUFFER</a>
+See <a href="#FOR:INDEX">INDEX</a>
+See <a href="#FOR:LIMIT">LIMIT</a>
+See <a href="#FOR:ITERATOR">ITERATOR</a></pre></div> </article> </li><li> <a name="FOR:STREAM-LINE-ITERATOR"> </a> <article> <header class="class"> <span class="type">class</span>  <h4 class="name"><code><a href="#FOR:STREAM-LINE-ITERATOR">STREAM-LINE-ITERATOR</a></code></h4>  </header> <div class="docstring"><pre>Iterator for line based input streams.
 
 If :CLOSE-STREAM is set to non-NIL, CLOSE is performed on the stream upon END.
 
-See <a href="#FOR-ITERATOR:BUFFER">BUFFER</a>
-See <a href="#FOR-ITERATOR:CLOSE-STREAM">CLOSE-STREAM</a>
-See <a href="#FOR-ITERATOR:ITERATOR">ITERATOR</a></pre></div> </article> </li><li> <a name="FOR-ITERATOR:VECTOR-ITERATOR"> </a> <article> <header class="class"> <span class="type">class</span>  <h4 class="name"><code><a href="#FOR-ITERATOR:VECTOR-ITERATOR">VECTOR-ITERATOR</a></code></h4>  </header> <div class="docstring"><pre>Iterator for vectors.
+See <a href="#FOR:BUFFER">BUFFER</a>
+See <a href="#FOR:CLOSE-STREAM">CLOSE-STREAM</a>
+See <a href="#FOR:ITERATOR">ITERATOR</a></pre></div> </article> </li><li> <a name="FOR:VECTOR-ITERATOR"> </a> <article> <header class="class"> <span class="type">class</span>  <h4 class="name"><code><a href="#FOR:VECTOR-ITERATOR">VECTOR-ITERATOR</a></code></h4>  </header> <div class="docstring"><pre>Iterator for vectors.
 
 Supports setting the current element.
 
-See <a href="#FOR-ITERATOR:START">START</a>
-See <a href="#FOR-ITERATOR:ITERATOR">ITERATOR</a></pre></div> </article> </li><li> <a name="FOR-ITERATOR:BUFFER"> </a> <article> <header class="accessor"> <span class="type">accessor</span>  <code>(</code><h4 class="name"><code><a href="#FOR-ITERATOR:BUFFER">BUFFER</a></code></h4> <code class="qualifiers"></code> <code class="arguments">OBJECT</code><code>)</code>  </header> <div class="docstring"><pre>Accessor to the stream-iterator's buffer.
-
-See <a href="#FOR-ITERATOR:STREAM-ITERATOR">STREAM-ITERATOR</a></pre></div> </article> </li><li> <a name="FOR-ITERATOR:CLOSE-STREAM"> </a> <article> <header class="accessor"> <span class="type">accessor</span>  <code>(</code><h4 class="name"><code><a href="#FOR-ITERATOR:CLOSE-STREAM">CLOSE-STREAM</a></code></h4> <code class="qualifiers"></code> <code class="arguments">OBJECT</code><code>)</code>  </header> <div class="docstring"><pre>Accessor to whether the stream should be closed on END call or not.
-
-See <a href="#FOR-ITERATOR:STREAM-ITERATOR">STREAM-ITERATOR</a>
-See <a href="#FOR-ITERATOR:STREAM-LINE-ITERATOR">STREAM-LINE-ITERATOR</a></pre></div> </article> </li><li> <a name="FOR-ITERATOR:CURRENT"> </a> <article> <header class="accessor"> <span class="type">accessor</span>  <code>(</code><h4 class="name"><code><a href="#FOR-ITERATOR:CURRENT">CURRENT</a></code></h4> <code class="qualifiers"></code> <code class="arguments">ITERATOR</code><code>)</code>  </header> <div class="docstring"><pre>Accessor to the current item of the iterator.
-
-The behaviour is undefined if CURRENT is used before NEXT has been called for a first time.
-Some (but not all) iterators may support setting the current element to a new value.
-
-See <a href="#FOR-ITERATOR:NEXT">NEXT</a></pre></div> </article> </li><li> <a name="FOR-ITERATOR:INDEX"> </a> <article> <header class="accessor"> <span class="type">accessor</span>  <code>(</code><h4 class="name"><code><a href="#FOR-ITERATOR:INDEX">INDEX</a></code></h4> <code class="qualifiers"></code> <code class="arguments">OBJECT</code><code>)</code>  </header> <div class="docstring"><pre>Accessor to the current index within the buffer.
-
-See <a href="#FOR-ITERATOR:STREAM-ITERATOR">STREAM-ITERATOR</a></pre></div> </article> </li><li> <a name="FOR-ITERATOR:LIMIT"> </a> <article> <header class="accessor"> <span class="type">accessor</span>  <code>(</code><h4 class="name"><code><a href="#FOR-ITERATOR:LIMIT">LIMIT</a></code></h4> <code class="qualifiers"></code> <code class="arguments">OBJECT</code><code>)</code>  </header> <div class="docstring"><pre>Accessor to the amount of data that is currently filled in the buffer.
-
-See <a href="#FOR-ITERATOR:STREAM-ITERATOR">STREAM-ITERATOR</a></pre></div> </article> </li><li> <a name="FOR-ITERATOR:OBJECT"> </a> <article> <header class="accessor"> <span class="type">accessor</span>  <code>(</code><h4 class="name"><code><a href="#FOR-ITERATOR:OBJECT">OBJECT</a></code></h4> <code class="qualifiers"></code> <code class="arguments">OBJECT</code><code>)</code>  </header> <div class="docstring"><pre>Accessor to the data structure the iterator is iterating over.
-
-Note that this is not necessarily the same object as what was passed into the
-constructor of the iterator. The iterator is free to modify this slot as it sees fit.
-
-See <a href="#FOR-ITERATOR:ITERATOR">ITERATOR</a></pre></div> </article> </li><li> <a name="FOR-ITERATOR:PREFETCH"> </a> <article> <header class="accessor"> <span class="type">accessor</span>  <code>(</code><h4 class="name"><code><a href="#FOR-ITERATOR:PREFETCH">PREFETCH</a></code></h4> <code class="qualifiers"></code> <code class="arguments">OBJECT</code><code>)</code>  </header> <div class="docstring"><pre>Cache for the next value
-
-Since the iterator constructs provided by CL do not allow merely testing whether a next
-element is available without losing it if there is one, we must cache the value on a
-HAS-MORE call and then use that on NEXT instead of calling the iterator function twice.
-
-See <a href="#FOR-ITERATOR:PACKAGE-ITERATOR">PACKAGE-ITERATOR</a>
-See <a href="#FOR-ITERATOR:HASH-TABLE-ITERATOR">HASH-TABLE-ITERATOR</a></pre></div> </article> </li><li> <a name="FOR-ITERATOR:START"> </a> <article> <header class="accessor"> <span class="type">accessor</span>  <code>(</code><h4 class="name"><code><a href="#FOR-ITERATOR:START">START</a></code></h4> <code class="qualifiers"></code> <code class="arguments">OBJECT</code><code>)</code>  </header> <div class="docstring"><pre>Accessor to the index that points to the next element of the vector-iterator.</pre></div> </article> </li><li> <a name="FOR-ITERATOR:TOTAL-LENGTH"> </a> <article> <header class="accessor"> <span class="type">accessor</span>  <code>(</code><h4 class="name"><code><a href="#FOR-ITERATOR:TOTAL-LENGTH">TOTAL-LENGTH</a></code></h4> <code class="qualifiers"></code> <code class="arguments">OBJECT</code><code>)</code>  </header> <div class="docstring"><pre>Slot holding the array-total-size.
-
-See <a href="#FOR-ITERATOR:ARRAY-ITERATOR">ARRAY-ITERATOR</a></pre></div> </article> </li><li> <a name="FOR-ITERATOR:HASH-TABLE-ITERATOR"> </a> <article> <header class="function"> <span class="type">function</span>  <code>(</code><h4 class="name"><code><a href="#FOR-ITERATOR:HASH-TABLE-ITERATOR">HASH-TABLE-ITERATOR</a></code></h4> <code class="qualifiers"></code> <code class="arguments">TABLE</code><code>)</code>  </header> <div class="docstring"><pre>Returns a function to iterate over a hash-table.
-
-See <a href="http://l1sp.org/cl/with-hash-table-iterator">CL:WITH-HASH-TABLE-ITERATOR</a></pre></div> </article> </li><li> <a name="FOR-ITERATOR:PACKAGE-ITERATOR"> </a> <article> <header class="function"> <span class="type">function</span>  <code>(</code><h4 class="name"><code><a href="#FOR-ITERATOR:PACKAGE-ITERATOR">PACKAGE-ITERATOR</a></code></h4> <code class="qualifiers"></code> <code class="arguments">PACKAGE STATUSES</code><code>)</code>  </header> <div class="docstring"><pre>Returns a function to iterate over a package's symbols.
-
-See <a href="http://l1sp.org/cl/with-package-iterator">CL:WITH-PACKAGE-ITERATOR</a></pre></div> </article> </li><li> <a name="FOR-ITERATOR:END"> </a> <article> <header class="generic"> <span class="type">generic</span>  <code>(</code><h4 class="name"><code><a href="#FOR-ITERATOR:END">END</a></code></h4> <code class="qualifiers"></code> <code class="arguments">ITERATOR</code><code>)</code>  </header> <div class="docstring"><pre>Ends the iterator and performs potential cleanup.
-
-You should always call this function with your iterator object once you are done to ensure
-proper termination.</pre></div> </article> </li><li> <a name="FOR-ITERATOR:HAS-MORE"> </a> <article> <header class="generic"> <span class="type">generic</span>  <code>(</code><h4 class="name"><code><a href="#FOR-ITERATOR:HAS-MORE">HAS-MORE</a></code></h4> <code class="qualifiers"></code> <code class="arguments">ITERATOR</code><code>)</code>  </header> <div class="docstring"><pre>Returns a generalised boolean indicating whether the iterator has more items or not.</pre></div> </article> </li><li> <a name="FOR-ITERATOR:MAKE-ITERATOR"> </a> <article> <header class="generic"> <span class="type">generic</span>  <code>(</code><h4 class="name"><code><a href="#FOR-ITERATOR:MAKE-ITERATOR">MAKE-ITERATOR</a></code></h4> <code class="qualifiers"></code> <code class="arguments">OBJECT &amp;KEY LIMIT BUFFER-SIZE ELEMENT-TYPE CLOSE-STREAM START
- &amp;ALLOW-OTHER-KEYS</code><code>)</code>  </header> <div class="docstring"><pre>Create an iterator object for the given type of object.</pre></div> </article> </li><li> <a name="FOR-ITERATOR:NEXT"> </a> <article> <header class="generic"> <span class="type">generic</span>  <code>(</code><h4 class="name"><code><a href="#FOR-ITERATOR:NEXT">NEXT</a></code></h4> <code class="qualifiers"></code> <code class="arguments">ITERATOR</code><code>)</code>  </header> <div class="docstring"><pre>Advances the iterator by one item and returns the new item.
-
-The behaviour is undefined if the iterator does not have more items.
-
-See <a href="#FOR-ITERATOR:HAS-MORE">HAS-MORE</a></pre></div> </article> </li></ul> </li><li class="package"> <h3> <a name="FOR-MINIMAL" href="#FOR-MINIMAL">FOR-MINIMAL</a> <span class="nicknames">(ORG.SHIRAKUMO.FOR.MINIMAL)</span> </h3> <ul><li> <a name="FOR-MINIMAL:="> </a> <article> <header class="function"> <span class="type">function</span>  <code>(</code><h4 class="name"><code><a href="#FOR-MINIMAL:=">=</a></code></h4> <code class="qualifiers"></code> <code class="arguments">NUMBER &amp;REST MORE-NUMBERS</code><code>)</code>  </header> <div class="docstring"><pre>Return T if all of its arguments are numerically equal, NIL otherwise.</pre></div> </article> </li><li> <a name="FOR-MINIMAL:APPEND"> </a> <article> <header class="function"> <span class="type">function</span>  <code>(</code><h4 class="name"><code><a href="#FOR-MINIMAL:APPEND">APPEND</a></code></h4> <code class="qualifiers"></code> <code class="arguments">&amp;REST LISTS</code><code>)</code>  </header> <div class="docstring"><pre>Construct a new list by concatenating the list arguments</pre></div> </article> </li><li> <a name="FOR-MINIMAL:COUNT"> </a> <article> <header class="function"> <span class="type">function</span>  <code>(</code><h4 class="name"><code><a href="#FOR-MINIMAL:COUNT">COUNT</a></code></h4> <code class="qualifiers"></code> <code class="arguments">ITEM SEQUENCE &amp;REST ARGS &amp;KEY FROM-END (START 0) (END NIL) (KEY NIL)
- (TEST (FUNCTION EQL) TEST-P) (TEST-NOT NIL TEST-NOT-P)</code><code>)</code>  </header> <div class="docstring"><pre>Return the number of elements in SEQUENCE satisfying a test with ITEM,
-   which defaults to EQL.</pre></div> </article> </li><li> <a name="FOR-MINIMAL:NCONC"> </a> <article> <header class="function"> <span class="type">function</span>  <code>(</code><h4 class="name"><code><a href="#FOR-MINIMAL:NCONC">NCONC</a></code></h4> <code class="qualifiers"></code> <code class="arguments">&amp;REST LISTS</code><code>)</code>  </header> <div class="docstring"><pre>Concatenates the lists given as arguments (by changing them)</pre></div> </article> </li><li> <a name="FOR-MINIMAL:REDUCE"> </a> <article> <header class="function"> <span class="type">function</span>  <code>(</code><h4 class="name"><code><a href="#FOR-MINIMAL:REDUCE">REDUCE</a></code></h4> <code class="qualifiers"></code> <code class="arguments">FUNCTION SEQUENCE &amp;REST ARGS &amp;KEY (KEY NIL) FROM-END (START 0) (END NIL)
- (INITIAL-VALUE NIL IVP)</code><code>)</code>  </header> <div class="docstring"><i>No docstring provided.</i></div> </article> </li><li> <a name="FOR-MINIMAL:FOR"> </a> <article> <header class="macro"> <span class="type">macro</span>  <code>(</code><h4 class="name"><code><a href="#FOR-MINIMAL:FOR">FOR</a></code></h4> <code class="qualifiers"></code> <code class="arguments">BINDINGS &amp;BODY BODY</code><code>)</code>  </header> <div class="docstring"><pre>Loops the body with the given bindings established.
-
-Each binding should have the form (var binding-type args*)
-
-Sometimes a var can be either a single symbol denoting a variable, or a
-lambda-list to which the result is destructured and bound via UPDATE.
-The support thereof depends on the binding construct.
-
-Within the body, special iteration clauses may be present. A clause must appear
-at the &quot;top-level&quot; of the body and cannot appear as a macro-expansion.
-
-If the loop is terminated normally by END-FOR then multiple values may be returned
-depending on how many bindings or clauses are present that want to return values.
-The order of the values is as follows: the clause values are returned in the
-order that the clauses appear in the body, followed by the binding values in the
-order of the binding expressions.
-
-The loop may also be terminated abnormally by a direct call to RETURN-FOR or RETURN.
-
-See <a href="#FOR-MINIMAL:UPDATE">UPDATE</a>
-See <a href="#FOR:BINDING">BINDING</a>
-See <a href="#FOR:CLAUSE">CLAUSE</a>
-See <a href="#FOR-MINIMAL:END-FOR">END-FOR</a>
-See <a href="#FOR-MINIMAL:SKIP-FOR">SKIP-FOR</a>
-See <a href="#FOR-MINIMAL:RETURN-FOR">RETURN-FOR</a>
-See <a href="NIL">WITH-FOR-TAGBODY</a>
-See <a href="NIL">WITH-FOR-BLOCK</a>
-See <a href="NIL">CONVERT-BINDINGS</a>
-See <a href="NIL">CONVERT-CLAUSES</a></pre></div> </article> </li><li> <a name="FOR-MINIMAL:UNLESS"> </a> <article> <header class="macro"> <span class="type">macro</span>  <code>(</code><h4 class="name"><code><a href="#FOR-MINIMAL:UNLESS">UNLESS</a></code></h4> <code class="qualifiers"></code> <code class="arguments">TEST &amp;BODY FORMS</code><code>)</code>  </header> <div class="docstring"><pre>If the first argument is not true, the rest of the forms are
-evaluated as a PROGN.</pre></div> </article> </li><li> <a name="FOR-MINIMAL:UPDATE"> </a> <article> <header class="macro"> <span class="type">macro</span>  <code>(</code><h4 class="name"><code><a href="#FOR-MINIMAL:UPDATE">UPDATE</a></code></h4> <code class="qualifiers"></code> <code class="arguments">PLACE VALUE-FORM</code><code>)</code>  </header> <div class="docstring"><pre>Allows updating the PLACE with a new value.
-
-Unlike just (setf place value), PLACE can also be a lambda-list where each variable
-is then properly updated with the respective element from value list.</pre></div> </article> </li><li> <a name="FOR-MINIMAL:WHEN"> </a> <article> <header class="macro"> <span class="type">macro</span>  <code>(</code><h4 class="name"><code><a href="#FOR-MINIMAL:WHEN">WHEN</a></code></h4> <code class="qualifiers"></code> <code class="arguments">TEST &amp;BODY FORMS</code><code>)</code>  </header> <div class="docstring"><pre>If the first argument is true, the rest of the forms are
-evaluated as a PROGN.</pre></div> </article> </li></ul> </li><li class="package"> <h3> <a name="FOR" href="#FOR">FOR</a> <span class="nicknames">(ORG.SHIRAKUMO.FOR)</span> </h3> <ul><li> <a name="FOR:ARRAY-ITERATOR"> </a> <article> <header class="class"> <span class="type">class</span>  <h4 class="name"><code><a href="#FOR:ARRAY-ITERATOR">ARRAY-ITERATOR</a></code></h4>  </header> <div class="docstring"><pre>Iterator for general arrays.
-
-Iteration is in row-major order.
-
-Supports setting the current element.
-
-See <a href="#FOR-ITERATOR:VECTOR-ITERATOR">VECTOR-ITERATOR</a>
-See <a href="#FOR-ITERATOR:TOTAL-LENGTH">TOTAL-LENGTH</a></pre></div> </article> </li><li> <a name="FOR:DIRECTORY-ITERATOR"> </a> <article> <header class="class"> <span class="type">class</span>  <h4 class="name"><code><a href="#FOR:DIRECTORY-ITERATOR">DIRECTORY-ITERATOR</a></code></h4>  </header> <div class="docstring"><pre>Iterator for a DIRECTORY listing.
-
-On construction, this performs a simple DIRECTORY call on the given object
-and then iterates over the result list of pathnames. Thus, the pathname must
-be wild.
-
-See <a href="#FOR-ITERATOR:LIST-ITERATOR">LIST-ITERATOR</a></pre></div> </article> </li><li> <a name="FOR:HASH-TABLE-ITERATOR"> </a> <article> <header class="class"> <span class="type">class</span>  <h4 class="name"><code><a href="#FOR:HASH-TABLE-ITERATOR">HASH-TABLE-ITERATOR</a></code></h4>  </header> <div class="docstring"><i>No docstring provided.</i></div> </article> </li><li> <a name="FOR:ITERATOR"> </a> <article> <header class="class"> <span class="type">class</span>  <h4 class="name"><code><a href="#FOR:ITERATOR">ITERATOR</a></code></h4>  </header> <div class="docstring"><pre>An iterator is responsible for iterating over a given data structure.
-
-See <a href="#FOR-ITERATOR:HAS-MORE">HAS-MORE</a>
-See <a href="#FOR-ITERATOR:NEXT">NEXT</a>
-See <a href="#FOR-ITERATOR:CURRENT">CURRENT</a>
-See <a href="#FOR-ITERATOR:MAKE-ITERATOR">MAKE-ITERATOR</a>
-See <a href="#FOR-ITERATOR:OBJECT">OBJECT</a></pre></div> </article> </li><li> <a name="FOR:LIST-ITERATOR"> </a> <article> <header class="class"> <span class="type">class</span>  <h4 class="name"><code><a href="#FOR:LIST-ITERATOR">LIST-ITERATOR</a></code></h4>  </header> <div class="docstring"><pre>Iterator for proper lists.
-
-Supports setting the current element.
-
-See <a href="#FOR-ITERATOR:ITERATOR">ITERATOR</a></pre></div> </article> </li><li> <a name="FOR:PACKAGE-ITERATOR"> </a> <article> <header class="class"> <span class="type">class</span>  <h4 class="name"><code><a href="#FOR:PACKAGE-ITERATOR">PACKAGE-ITERATOR</a></code></h4>  </header> <div class="docstring"><pre>Iterator for the symbols in a package.
-
-The type of symbols that are iterated can be set through the :STATUS initarg, which must
-be a list containing any of the following keywords: :INTERNAL :EXTERNAL :INHERITED
-
-See <a href="#FOR-ITERATOR:PREFETCH">PREFETCH</a>
-See <a href="#FOR-ITERATOR:ITERATOR">ITERATOR</a></pre></div> </article> </li><li> <a name="FOR:RANDOM-ITERATOR"> </a> <article> <header class="class"> <span class="type">class</span>  <h4 class="name"><code><a href="#FOR:RANDOM-ITERATOR">RANDOM-ITERATOR</a></code></h4>  </header> <div class="docstring"><pre>Iterator for random numbers.
-
-This iterator can be constructed through a RANDOM-STATE object. The argument for RANDOM
-that determines its limit can be passed through the :LIMIT initarg.
-
-See <a href="#FOR-ITERATOR:ITERATOR">ITERATOR</a></pre></div> </article> </li><li> <a name="FOR:STREAM-ITERATOR"> </a> <article> <header class="class"> <span class="type">class</span>  <h4 class="name"><code><a href="#FOR:STREAM-ITERATOR">STREAM-ITERATOR</a></code></h4>  </header> <div class="docstring"><pre>Iterator for input streams.
-
-The stream is read through a buffer, the size of which can be set via the :BUFFER-SIZE
-initarg. If :CLOSE-STREAM is set to non-NIL, CLOSE is performed on the stream upon END.
-
-Supports setting the &quot;current&quot; element if the stream supports writing to it of course.
-
-See <a href="#FOR-ITERATOR:BUFFER">BUFFER</a>
-See <a href="#FOR-ITERATOR:INDEX">INDEX</a>
-See <a href="#FOR-ITERATOR:LIMIT">LIMIT</a>
-See <a href="#FOR-ITERATOR:ITERATOR">ITERATOR</a></pre></div> </article> </li><li> <a name="FOR:STREAM-LINE-ITERATOR"> </a> <article> <header class="class"> <span class="type">class</span>  <h4 class="name"><code><a href="#FOR:STREAM-LINE-ITERATOR">STREAM-LINE-ITERATOR</a></code></h4>  </header> <div class="docstring"><pre>Iterator for line based input streams.
-
-If :CLOSE-STREAM is set to non-NIL, CLOSE is performed on the stream upon END.
-
-See <a href="#FOR-ITERATOR:BUFFER">BUFFER</a>
-See <a href="#FOR-ITERATOR:CLOSE-STREAM">CLOSE-STREAM</a>
-See <a href="#FOR-ITERATOR:ITERATOR">ITERATOR</a></pre></div> </article> </li><li> <a name="FOR:VECTOR-ITERATOR"> </a> <article> <header class="class"> <span class="type">class</span>  <h4 class="name"><code><a href="#FOR:VECTOR-ITERATOR">VECTOR-ITERATOR</a></code></h4>  </header> <div class="docstring"><pre>Iterator for vectors.
-
-Supports setting the current element.
-
-See <a href="#FOR-ITERATOR:START">START</a>
-See <a href="#FOR-ITERATOR:ITERATOR">ITERATOR</a></pre></div> </article> </li><li> <a name="FOR:BINDING"> </a> <article> <header class="accessor"> <span class="type">accessor</span>  <code>(</code><h4 class="name"><code><a href="#FOR:BINDING">BINDING</a></code></h4> <code class="qualifiers"></code> <code class="arguments">NAME</code><code>)</code>  </header> <div class="docstring"><pre>Accessor to the function that compiles the given binding.
+See <a href="#FOR:START">START</a>
+See <a href="#FOR:ITERATOR">ITERATOR</a></pre></div> </article> </li><li> <a name="FOR:BINDING"> </a> <article> <header class="accessor"> <span class="type">accessor</span>  <code>(</code><h4 class="name"><code><a href="#FOR:BINDING">BINDING</a></code></h4> <code class="qualifiers"></code> <code class="arguments">NAME</code><code>)</code>  </header> <div class="docstring"><pre>Accessor to the function that compiles the given binding.
 
 If there is no binding named by the given symbol directly, another search is
 performed using the symbol with the same symbol-name from the FOR package.
 
 See <a href="#FOR:REMOVE-BINDING">REMOVE-BINDING</a></pre></div> </article> </li><li> <a name="FOR:BUFFER"> </a> <article> <header class="accessor"> <span class="type">accessor</span>  <code>(</code><h4 class="name"><code><a href="#FOR:BUFFER">BUFFER</a></code></h4> <code class="qualifiers"></code> <code class="arguments">OBJECT</code><code>)</code>  </header> <div class="docstring"><pre>Accessor to the stream-iterator's buffer.
 
-See <a href="#FOR-ITERATOR:STREAM-ITERATOR">STREAM-ITERATOR</a></pre></div> </article> </li><li> <a name="FOR:CLAUSE"> </a> <article> <header class="accessor"> <span class="type">accessor</span>  <code>(</code><h4 class="name"><code><a href="#FOR:CLAUSE">CLAUSE</a></code></h4> <code class="qualifiers"></code> <code class="arguments">NAME</code><code>)</code>  </header> <div class="docstring"><pre>Accessor to the function that compiles the given clause.
+See <a href="#FOR:STREAM-ITERATOR">STREAM-ITERATOR</a></pre></div> </article> </li><li> <a name="FOR:CLAUSE"> </a> <article> <header class="accessor"> <span class="type">accessor</span>  <code>(</code><h4 class="name"><code><a href="#FOR:CLAUSE">CLAUSE</a></code></h4> <code class="qualifiers"></code> <code class="arguments">NAME</code><code>)</code>  </header> <div class="docstring"><pre>Accessor to the function that compiles the given clause.
 
 If there is no clause named by the given symbol directly, another search is
 performed using the symbol with the same symbol-name from the FOR package.
 
 See <a href="#FOR:REMOVE-CLAUSE">REMOVE-CLAUSE</a></pre></div> </article> </li><li> <a name="FOR:CLOSE-STREAM"> </a> <article> <header class="accessor"> <span class="type">accessor</span>  <code>(</code><h4 class="name"><code><a href="#FOR:CLOSE-STREAM">CLOSE-STREAM</a></code></h4> <code class="qualifiers"></code> <code class="arguments">OBJECT</code><code>)</code>  </header> <div class="docstring"><pre>Accessor to whether the stream should be closed on END call or not.
 
-See <a href="#FOR-ITERATOR:STREAM-ITERATOR">STREAM-ITERATOR</a>
-See <a href="#FOR-ITERATOR:STREAM-LINE-ITERATOR">STREAM-LINE-ITERATOR</a></pre></div> </article> </li><li> <a name="FOR:CURRENT"> </a> <article> <header class="accessor"> <span class="type">accessor</span>  <code>(</code><h4 class="name"><code><a href="#FOR:CURRENT">CURRENT</a></code></h4> <code class="qualifiers"></code> <code class="arguments">ITERATOR</code><code>)</code>  </header> <div class="docstring"><pre>Accessor to the current item of the iterator.
+See <a href="#FOR:STREAM-ITERATOR">STREAM-ITERATOR</a>
+See <a href="#FOR:STREAM-LINE-ITERATOR">STREAM-LINE-ITERATOR</a></pre></div> </article> </li><li> <a name="FOR:CURRENT"> </a> <article> <header class="accessor"> <span class="type">accessor</span>  <code>(</code><h4 class="name"><code><a href="#FOR:CURRENT">CURRENT</a></code></h4> <code class="qualifiers"></code> <code class="arguments">ITERATOR</code><code>)</code>  </header> <div class="docstring"><pre>Accessor to the current item of the iterator.
 
 The behaviour is undefined if CURRENT is used before NEXT has been called for a first time.
 Some (but not all) iterators may support setting the current element to a new value.
 
-See <a href="#FOR-ITERATOR:NEXT">NEXT</a></pre></div> </article> </li><li> <a name="FOR:INDEX"> </a> <article> <header class="accessor"> <span class="type">accessor</span>  <code>(</code><h4 class="name"><code><a href="#FOR:INDEX">INDEX</a></code></h4> <code class="qualifiers"></code> <code class="arguments">OBJECT</code><code>)</code>  </header> <div class="docstring"><pre>Accessor to the current index within the buffer.
+See <a href="#FOR:NEXT">NEXT</a></pre></div> </article> </li><li> <a name="FOR:INDEX"> </a> <article> <header class="accessor"> <span class="type">accessor</span>  <code>(</code><h4 class="name"><code><a href="#FOR:INDEX">INDEX</a></code></h4> <code class="qualifiers"></code> <code class="arguments">OBJECT</code><code>)</code>  </header> <div class="docstring"><pre>Accessor to the current index within the buffer.
 
-See <a href="#FOR-ITERATOR:STREAM-ITERATOR">STREAM-ITERATOR</a></pre></div> </article> </li><li> <a name="FOR:LIMIT"> </a> <article> <header class="accessor"> <span class="type">accessor</span>  <code>(</code><h4 class="name"><code><a href="#FOR:LIMIT">LIMIT</a></code></h4> <code class="qualifiers"></code> <code class="arguments">OBJECT</code><code>)</code>  </header> <div class="docstring"><pre>Accessor to the amount of data that is currently filled in the buffer.
+See <a href="#FOR:STREAM-ITERATOR">STREAM-ITERATOR</a></pre></div> </article> </li><li> <a name="FOR:LIMIT"> </a> <article> <header class="accessor"> <span class="type">accessor</span>  <code>(</code><h4 class="name"><code><a href="#FOR:LIMIT">LIMIT</a></code></h4> <code class="qualifiers"></code> <code class="arguments">OBJECT</code><code>)</code>  </header> <div class="docstring"><pre>Accessor to the amount of data that is currently filled in the buffer.
 
-See <a href="#FOR-ITERATOR:STREAM-ITERATOR">STREAM-ITERATOR</a></pre></div> </article> </li><li> <a name="FOR:OBJECT"> </a> <article> <header class="accessor"> <span class="type">accessor</span>  <code>(</code><h4 class="name"><code><a href="#FOR:OBJECT">OBJECT</a></code></h4> <code class="qualifiers"></code> <code class="arguments">OBJECT</code><code>)</code>  </header> <div class="docstring"><pre>Accessor to the data structure the iterator is iterating over.
+See <a href="#FOR:STREAM-ITERATOR">STREAM-ITERATOR</a></pre></div> </article> </li><li> <a name="FOR:OBJECT"> </a> <article> <header class="accessor"> <span class="type">accessor</span>  <code>(</code><h4 class="name"><code><a href="#FOR:OBJECT">OBJECT</a></code></h4> <code class="qualifiers"></code> <code class="arguments">OBJECT</code><code>)</code>  </header> <div class="docstring"><pre>Accessor to the data structure the iterator is iterating over.
 
 Note that this is not necessarily the same object as what was passed into the
 constructor of the iterator. The iterator is free to modify this slot as it sees fit.
 
-See <a href="#FOR-ITERATOR:ITERATOR">ITERATOR</a></pre></div> </article> </li><li> <a name="FOR:PREFETCH"> </a> <article> <header class="accessor"> <span class="type">accessor</span>  <code>(</code><h4 class="name"><code><a href="#FOR:PREFETCH">PREFETCH</a></code></h4> <code class="qualifiers"></code> <code class="arguments">OBJECT</code><code>)</code>  </header> <div class="docstring"><pre>Cache for the next value
+See <a href="#FOR:ITERATOR">ITERATOR</a></pre></div> </article> </li><li> <a name="FOR:PREFETCH"> </a> <article> <header class="accessor"> <span class="type">accessor</span>  <code>(</code><h4 class="name"><code><a href="#FOR:PREFETCH">PREFETCH</a></code></h4> <code class="qualifiers"></code> <code class="arguments">OBJECT</code><code>)</code>  </header> <div class="docstring"><pre>Cache for the next value
 
 Since the iterator constructs provided by CL do not allow merely testing whether a next
 element is available without losing it if there is one, we must cache the value on a
 HAS-MORE call and then use that on NEXT instead of calling the iterator function twice.
 
-See <a href="#FOR-ITERATOR:PACKAGE-ITERATOR">PACKAGE-ITERATOR</a>
-See <a href="#FOR-ITERATOR:HASH-TABLE-ITERATOR">HASH-TABLE-ITERATOR</a></pre></div> </article> </li><li> <a name="FOR:START"> </a> <article> <header class="accessor"> <span class="type">accessor</span>  <code>(</code><h4 class="name"><code><a href="#FOR:START">START</a></code></h4> <code class="qualifiers"></code> <code class="arguments">OBJECT</code><code>)</code>  </header> <div class="docstring"><pre>Accessor to the index that points to the next element of the vector-iterator.</pre></div> </article> </li><li> <a name="FOR:TOTAL-LENGTH"> </a> <article> <header class="accessor"> <span class="type">accessor</span>  <code>(</code><h4 class="name"><code><a href="#FOR:TOTAL-LENGTH">TOTAL-LENGTH</a></code></h4> <code class="qualifiers"></code> <code class="arguments">OBJECT</code><code>)</code>  </header> <div class="docstring"><pre>Slot holding the array-total-size.
+See <a href="#FOR:PACKAGE-ITERATOR">PACKAGE-ITERATOR</a>
+See <a href="#FOR:HASH-TABLE-ITERATOR">HASH-TABLE-ITERATOR</a></pre></div> </article> </li><li> <a name="FOR:START"> </a> <article> <header class="accessor"> <span class="type">accessor</span>  <code>(</code><h4 class="name"><code><a href="#FOR:START">START</a></code></h4> <code class="qualifiers"></code> <code class="arguments">OBJECT</code><code>)</code>  </header> <div class="docstring"><pre>Accessor to the index that points to the next element of the vector-iterator.</pre></div> </article> </li><li> <a name="FOR:TOTAL-LENGTH"> </a> <article> <header class="accessor"> <span class="type">accessor</span>  <code>(</code><h4 class="name"><code><a href="#FOR:TOTAL-LENGTH">TOTAL-LENGTH</a></code></h4> <code class="qualifiers"></code> <code class="arguments">OBJECT</code><code>)</code>  </header> <div class="docstring"><pre>Slot holding the array-total-size.
 
-See <a href="#FOR-ITERATOR:ARRAY-ITERATOR">ARRAY-ITERATOR</a></pre></div> </article> </li><li> <a name="FOR:="> </a> <article> <header class="function"> <span class="type">function</span>  <code>(</code><h4 class="name"><code><a href="#FOR:=">=</a></code></h4> <code class="qualifiers"></code> <code class="arguments">NUMBER &amp;REST MORE-NUMBERS</code><code>)</code>  </header> <div class="docstring"><pre>Return T if all of its arguments are numerically equal, NIL otherwise.</pre></div> </article> </li><li> <a name="FOR:APPEND"> </a> <article> <header class="function"> <span class="type">function</span>  <code>(</code><h4 class="name"><code><a href="#FOR:APPEND">APPEND</a></code></h4> <code class="qualifiers"></code> <code class="arguments">&amp;REST LISTS</code><code>)</code>  </header> <div class="docstring"><pre>Construct a new list by concatenating the list arguments</pre></div> </article> </li><li> <a name="FOR:COUNT"> </a> <article> <header class="function"> <span class="type">function</span>  <code>(</code><h4 class="name"><code><a href="#FOR:COUNT">COUNT</a></code></h4> <code class="qualifiers"></code> <code class="arguments">ITEM SEQUENCE &amp;REST ARGS &amp;KEY FROM-END (START 0) (END NIL) (KEY NIL)
+See <a href="#FOR:ARRAY-ITERATOR">ARRAY-ITERATOR</a></pre></div> </article> </li><li> <a name="FOR:="> </a> <article> <header class="function"> <span class="type">function</span>  <code>(</code><h4 class="name"><code><a href="#FOR:=">=</a></code></h4> <code class="qualifiers"></code> <code class="arguments">NUMBER &amp;REST MORE-NUMBERS</code><code>)</code>  </header> <div class="docstring"><pre>Return T if all of its arguments are numerically equal, NIL otherwise.</pre></div> </article> </li><li> <a name="FOR:APPEND"> </a> <article> <header class="function"> <span class="type">function</span>  <code>(</code><h4 class="name"><code><a href="#FOR:APPEND">APPEND</a></code></h4> <code class="qualifiers"></code> <code class="arguments">&amp;REST LISTS</code><code>)</code>  </header> <div class="docstring"><pre>Construct a new list by concatenating the list arguments</pre></div> </article> </li><li> <a name="FOR:COUNT"> </a> <article> <header class="function"> <span class="type">function</span>  <code>(</code><h4 class="name"><code><a href="#FOR:COUNT">COUNT</a></code></h4> <code class="qualifiers"></code> <code class="arguments">ITEM SEQUENCE &amp;REST ARGS &amp;KEY FROM-END (START 0) (END NIL) (KEY NIL)
  (TEST (FUNCTION EQL) TEST-P) (TEST-NOT NIL TEST-NOT-P)</code><code>)</code>  </header> <div class="docstring"><pre>Return the number of elements in SEQUENCE satisfying a test with ITEM,
    which defaults to EQL.</pre></div> </article> </li><li> <a name="FOR:HASH-TABLE-ITERATOR"> </a> <article> <header class="function"> <span class="type">function</span>  <code>(</code><h4 class="name"><code><a href="#FOR:HASH-TABLE-ITERATOR">HASH-TABLE-ITERATOR</a></code></h4> <code class="qualifiers"></code> <code class="arguments">TABLE</code><code>)</code>  </header> <div class="docstring"><pre>Returns a function to iterate over a hash-table.
 
@@ -397,7 +310,13 @@ proper termination.</pre></div> </article> </li><li> <a name="FOR:HAS-MORE"> </a
 
 The behaviour is undefined if the iterator does not have more items.
 
-See <a href="#FOR-ITERATOR:HAS-MORE">HAS-MORE</a></pre></div> </article> </li><li> <a name="FOR:DEFINE-ALIAS-BINDING"> </a> <article> <header class="macro"> <span class="type">macro</span>  <code>(</code><h4 class="name"><code><a href="#FOR:DEFINE-ALIAS-BINDING">DEFINE-ALIAS-BINDING</a></code></h4> <code class="qualifiers"></code> <code class="arguments">NAME REFERENCED-BINDING-NAME</code><code>)</code>  </header> <div class="docstring"><pre>Defines an alias for a binding.
+See <a href="#FOR:HAS-MORE">HAS-MORE</a></pre></div> </article> </li><li> <a name="FOR:DEFINE-ACCUMULATION-BINDING"> </a> <article> <header class="macro"> <span class="type">macro</span>  <code>(</code><h4 class="name"><code><a href="#FOR:DEFINE-ACCUMULATION-BINDING">DEFINE-ACCUMULATION-BINDING</a></code></h4> <code class="qualifiers"></code> <code class="arguments">NAME (VAR &amp;REST ARGS) &amp;BODY BODY</code><code>)</code>  </header> <div class="docstring"><pre>Defines a binding for an accumulator.
+
+This is identical to DEFINE-FORM-BINDING with the exception that the
+secondary value is set to a (RETURN-FOR var) for you, meaning the
+variable's contents are returned from the FOR upon normal termination.
+
+See <a href="#FOR:DEFINE-FORM-BINDING">DEFINE-FORM-BINDING</a></pre></div> </article> </li><li> <a name="FOR:DEFINE-ALIAS-BINDING"> </a> <article> <header class="macro"> <span class="type">macro</span>  <code>(</code><h4 class="name"><code><a href="#FOR:DEFINE-ALIAS-BINDING">DEFINE-ALIAS-BINDING</a></code></h4> <code class="qualifiers"></code> <code class="arguments">NAME REFERENCED-BINDING-NAME</code><code>)</code>  </header> <div class="docstring"><pre>Defines an alias for a binding.
 
 See <a href="#FOR:BINDING">BINDING</a></pre></div> </article> </li><li> <a name="FOR:DEFINE-DIRECT-BINDING"> </a> <article> <header class="macro"> <span class="type">macro</span>  <code>(</code><h4 class="name"><code><a href="#FOR:DEFINE-DIRECT-BINDING">DEFINE-DIRECT-BINDING</a></code></h4> <code class="qualifiers"></code> <code class="arguments">NAME ARGS &amp;BODY BODY</code><code>)</code>  </header> <div class="docstring"><pre>Defines a binding function.
 
@@ -497,12 +416,12 @@ order of the binding expressions.
 
 The loop may also be terminated abnormally by a direct call to RETURN-FOR or RETURN.
 
-See <a href="#FOR-MINIMAL:UPDATE">UPDATE</a>
+See <a href="#FOR:UPDATE">UPDATE</a>
 See <a href="#FOR:BINDING">BINDING</a>
 See <a href="#FOR:CLAUSE">CLAUSE</a>
-See <a href="#FOR-MINIMAL:END-FOR">END-FOR</a>
-See <a href="#FOR-MINIMAL:SKIP-FOR">SKIP-FOR</a>
-See <a href="#FOR-MINIMAL:RETURN-FOR">RETURN-FOR</a>
+See <a href="#FOR:END-FOR">END-FOR</a>
+See <a href="#FOR:SKIP-FOR">SKIP-FOR</a>
+See <a href="#FOR:RETURN-FOR">RETURN-FOR</a>
 See <a href="NIL">WITH-FOR-TAGBODY</a>
 See <a href="NIL">WITH-FOR-BLOCK</a>
 See <a href="NIL">CONVERT-BINDINGS</a>

@@ -447,7 +447,7 @@ HAS-MORE call and then use that on NEXT instead of calling the iterator function
 See PACKAGE-ITERATOR
 See HASH-TABLE-ITERATOR")
 
-  (function hash-table-iterator
+  (type hash-table-iterator
     "Iterator for the key/value pairs in a package.
 
 Each value returned by this iterator's CURRENT/NEXT is always a list of two values, the

@@ -12,26 +12,56 @@ Now we can use the `for` macro to do iteration. Most of the constructs you know 
               (vi across #(a b c d)))
       (format T "~&~a ~a" li vi))
 
+In `loop` this might look as follows:
+
+    (loop for li in (list 1 2 3 4)
+          for vi across #(a b c d)
+          do (format T "~&~a ~a" li vi))
+
 Unlike `loop` and `iterate`, `for` makes a distinction between "bindings" and body forms. Body forms can also contain clauses:
 
     (for:for ((li in (list 1 2 3 4)))
       (thereis (evenp li)))
+
+In `loop` this might look as follows:
+
+    (loop for li in (list 1 2 3 4)
+          thereis (evenp li))
 
 Naturally, there's also accumulation bindings:
 
     (for:for ((randoms collecting (random 10)))
       (until (= 10 (length randoms))))
 
+In `loop` this might look as follows:
+
+    (loop collect (random 10) into randoms
+          until (= 10 (length randoms)))
+
 You might realise that the above is a rather inefficient way of writing the loop. Instead we can also use the  `repeat` binding:
 
     (for:for ((i repeat 10)
               (randoms collecting (random 10))))
+
+In `loop` this might look as follows:
+
+    (loop repeat 10
+          collect (random 10))
 
 If we have multiple bindings or clauses that might have useful values to return, all of them are returned:
 
     (for:for ((a over *random-state* :limit 10)
               (b collect a))
       (thereis (evenp a)))
+
+In `loop` this might look as follows:
+
+    (loop with iterator = (for-iterator:make-iterator *random-state* :limit 10)
+          while (for-iterator:has-more iterator)
+          for a = (for-iterator:next iterator)
+          collect a into b
+          when (evenp a)
+          return (values T b))
       
 In order for short-circuiting clauses to have highest priority on values, clause-values are always returned first followed by binding values. Otherwise the order follows the declaration order of the respective clauses/bindings. Note that clauses must appear as a "top-level" form within the `for` body and cannot appear as the result of a macroexpansion.
 
@@ -47,17 +77,36 @@ For also features a generic iterator construct that allows you to iterate over a
               (g over (make-string-input-stream "Hi!")))
       (print (list a b c d e f g)))
 
+Note that the `over` iterator construct can be drastically slower than a tailored iteration construct.
+
 Some iterators also support updating the current element. If you require doing so, you can use the `updating` binding.
 
     (for:for ((list as (list 1 2 3 4 5))
               (item updating list))
       (setf item (expt item item)))
 
+In `loop` this might look as follows:
+
+    (loop with list = (list 1 2 3 4 5)
+          with iterator = (for-iterator:make-iterator list)
+          while (for-iterator:has-more iterator)
+          do (for-iterator:next iterator)
+             (symbol-macrolet ((item (for-iterator:current iterator)))
+               (setf item (expt item item)))
+          finally (return list))
+
 Some of the bindings also support destructuring the current item by a destructuring-lambda-list.
 
     (for:for (((type &key object limit) in '((counter :limit 5)
                                              (package :object *package*))))
       (format T "~&Type: ~a~@[ Object: ~a~]~@[ Limit: ~a~]" type object limit))
+
+In `loop` this might look as follows:
+
+    (loop for list in '((counter :limit 5)
+                        (package :object *package*))
+          do (destructuring-bind (type &key object limit) list
+               (format T "~&Type: ~a~@[ Object: ~a~]~@[ Limit: ~a~]" type object limit)))
       
 You can check a binding's or clause's documentation with `(documentation 'in 'for:binding)` which will tell you whether it supports destructuring through `update`.
 
@@ -68,11 +117,27 @@ Sometimes you may want to iterate over multiple things in sequence rather than i
                (across #((勉強 studying) (宿題 home-work) (授業 lesson) (試験 exam)))))
       (format T "~&~a: ~a" k v))
 
+In `loop` this might look as follows:
+
+    (progn (loop for (k v) in '((駅 station) (出口 exit) (特急 express-train))
+                 do (format T "~&~a: ~a" k v))
+           (loop for (k v) across #((勉強 studying) (宿題 home-work) (授業 lesson) (試験 exam))
+                 do (format T "~&~a: ~a" k v)))
+
 If a binding should only be updated based on a condition, there's the `when` and `unless` bindings that defer based on a test.
 
     (for:for ((random = (random 10))
               (list when (evenp random) collect random))
       (until (= 10 (length list))))
+      
+In `loop` this might look as follows:
+
+    (loop with list = ()
+          for random = (random 10)
+          when (evenp random)
+          do (push random list)
+          until (= 10 (length list))
+          finally (return (nreverse list)))
 
 The following bindings are included in the `for-minimal` package:
 

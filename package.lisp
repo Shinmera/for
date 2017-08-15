@@ -101,6 +101,7 @@
    #:define-alias-binding
    #:define-direct-binding
    #:define-form-binding
+   #:define-accumulation-binding
    #:define-form-symbol-macro-binding
    #:define-value-binding
    #:define-value-symbol-macro-binding)
