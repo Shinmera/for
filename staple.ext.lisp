@@ -1,31 +1,22 @@
-(in-package #:cl-user)
+(defpackage #:for-staple
+  (:nicknames #:org.shirakumo.for.staple)
+  (:use #:cl))
+(in-package #:org.shirakumo.for.staple)
 
-(defclass symb-binding (staple:symb-function)
-  ())
+(defclass binding (definitions:global-definition) ())
 
-(defmethod staple:symb-function ((symb symb-binding))
-  (for:binding (staple:symb-symbol symb)))
+(definitions:define-simple-type-map binding for:binding)
+(definitions:define-simple-object-lookup binding for:binding)
+(definitions:define-simple-documentation-lookup binding for:binding)
+(definitions:define-simple-definition-resolver binding for:binding)
+(defmethod staple:definition-order ((_ binding)) 91)
 
-(defmethod staple:symb-documentation ((symb symb-binding))
-  (documentation (staple:symb-symbol symb) 'for:binding))
+(defclass clause (definitions:global-definition) ())
 
-(defmethod staple:symb-type-order ((symb (eql 'symb-binding)))
-  (1+ (staple:symb-type-order 'staple:symb-function)))
+(definitions:define-simple-type-map clause for:clause)
+(definitions:define-simple-object-lookup clause for:clause)
+(definitions:define-simple-documentation-lookup clause for:clause)
+(definitions:define-simple-definition-resolver clause for:clause)
+(defmethod staple:definition-order ((_ clause)) 92)
 
-(defclass symb-clause (staple:symb-function)
-  ())
-
-(defmethod staple:symb-function ((symb symb-clause))
-  (for:clause (staple:symb-symbol symb)))
-
-(defmethod staple:symb-documentation ((symb symb-clause))
-  (documentation (staple:symb-symbol symb) 'for:clause))
-
-(defmethod staple:symb-type-order ((symb (eql 'symb-clause)))
-  (1+ (staple:symb-type-order 'symb-binding)))
-
-(staple:define-simple-converter symb-binding for:binding)
-(staple:define-simple-converter symb-clause for:clause)
-
-(defmethod staple:system-options append ((system (eql (asdf:find-system :for))))
-  (list :packages '(:for)))
+(setf (staple:packages :for) '(:for))
