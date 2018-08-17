@@ -10,7 +10,9 @@
   :author "Nicolas Hafner <shinmera@tymoon.eu>"
   :maintainer "Nicolas Hafner <shinmera@tymoon.eu>"
   :description "An extensible iteration macro library."
-  :homepage "https://github.com/Shinmera/for"
+  :homepage "https://Shinmera.github.io/for/"
+  :bug-tracker "https://github.com/Shinmera/for/issues"
+  :source-control (:git "https://github.com/Shinmera/for.git")
   :serial T
   :components ((:file "package")
                (:file "toolkit")
