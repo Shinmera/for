@@ -65,7 +65,7 @@
           (end-for))))
 
 (define-value-binding on (var list &key (by NIL by-p))
-  (declare (type list var list))
+  (declare (type list list))
   `(cond (,list
           ,(if by-p
                `(progn (update ,var ,list)
