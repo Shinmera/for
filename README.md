@@ -264,7 +264,7 @@ In order to ease things a bit there is also `define-simple-clause` which provide
 One thing to note is that the surrounding forms of clauses always appear deeper than those of bindings and that the result value forms of clauses always appear before those of bindings. The loop body form of a clause appears at the exact position in the body where the clause expression previously appeared.
 
 ### Iterators
-In order to provide the generic `over` iteration construct, For includes a protocol to define iterators. In order for an iterator to work, it has to subclass `iterator` and provide three methods: `make-iterator`, `has-more`, and `next`. The first is merely there so that we can dispatch on the type of object we'd like to iterate over and construct an appropriate iterator for it. The second should return a generalised boolean that tells us whether we can safely call `next`. Finally, `next` itself advances the iterator and returns a new element. If sensible and possible, a method on `(setf current)` can also be provided to allow updating the current element to a new value.
+In order to provide the generic `over` iteration construct, For includes a protocol to define iterators. In order for an iterator to work, it has to subclass `iterator` and provide three methods: `make-iterator`, `has-more`, and `next`. The first is merely there so that we can dispatch on the type of object we'd like to iterate over and construct an appropriate iterator for it. The second should return a generalised boolean that tells us whether we can safely call `next`. Finally, `next` itself advances the iterator and returns a new element. If sensible and possible, a method on `(setf current)` can also be provided to allow updating the current element to a new value. In order to speed up iteration in most cases, it's also useful to provide a `step-functions` method.
 
 Let's look at the list iterator as an example:
 
@@ -283,8 +283,20 @@ Let's look at the list iterator as an example:
     
     (defmethod (setf current) (value (iterator list-iterator))
       (setf (car (object iterator)) value))
+      
+    (defmethod step-functions ((iterator list-iterator))
+      (let ((list (object iterator)))
+        (values
+         (lambda ()
+           (setf list (cdr list))
+           (car list))
+         (lambda ()
+           (cdr list))
+         (lambda (value)
+           (setf (car list) value))
+         (lambda ()))))
     
     (defmethod make-iterator ((list list) &key)
       (make-instance 'list-iterator :object list))
 
-First we subclass `iterator`. Next we define an initialize method in order to prepend a cons to the list. We do this so that we know the next element will always be in the cadr of the `object` and we can still set the car of the current cons cell to update it. The `has-more` test is implemented accordingly. On `next` we then simply pop off the first cons and return our new current element. The `(setf current)` can then just update the car of the `object`. Finally we need a `make-iterator` method to dispatch on lists.
+First we subclass `iterator`. Next we define an initialize method in order to prepend a cons to the list. We do this so that we know the next element will always be in the cadr of the `object` and we can still set the car of the current cons cell to update it. The `has-more` test is implemented accordingly. On `next` we then simply pop off the first cons and return our new current element. The `(setf current)` can then just update the car of the `object`. The `step-functions` method then implements most of that logic again inside closures that avoid any CLOS dispatch. Finally we need a `make-iterator` method to dispatch on lists.

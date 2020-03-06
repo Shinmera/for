@@ -14,6 +14,7 @@
    #:next
    #:current
    #:end
+   #:step-functions
    #:make-iterator
    #:iterator
    #:object

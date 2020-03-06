@@ -315,6 +315,22 @@ See NEXT")
 You should always call this function with your iterator object once you are done to ensure
 proper termination.")
 
+  (function step-functions
+    "Returns a set of functions to perform the iteration.
+
+Returns four values:
+
+   NEXT      --- Function of zero arguments that returns the next element.
+   HAS-MORE  --- Function of zero arguments that returns whether there are
+                 more elements available.
+   UPDATE    --- Function of one argument that sets the current element to
+                 the given value if possible.
+   END       --- Function of zero arguments to finalise the iteration.
+
+Iterators may specialise on this method to return tailored stepping
+functions that avoid the CLOS dispatch cost. Note that calling these
+functions may or may not change the internal iterator state.")
+
   (function make-iterator
     "Create an iterator object for the given type of object.")
 
