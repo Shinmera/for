@@ -128,6 +128,51 @@
 (defmethod make-iterator ((array array) &key (start 0))
   (make-instance 'array-iterator :object array :start start))
 
+(defclass sequence-iterator (iterator)
+  ((iterator :accessor iterator)))
+
+(defmethod initialize-instance :after ((iterator sequence-iterator) &key object start end)
+  (setf (iterator iterator) (multiple-value-list
+                             (#+sbcl sb-sequence:make-sequence-iterator
+                              #+abcl sequence:make-sequence-iterator
+                              #-(or sbcl abcl) (lambda (&rest _)
+                                                 (declare (ignore _))
+                                                 (error "This implementation has extensible sequences, but is not supported by FOR. Please contact the maintainer."))
+                              object :start start :end end))))
+
+(defmethod has-more ((iterator sequence-iterator))
+  (destructuring-bind (state limit from-end step endp . _) (iterator iterator)
+    (declare (ignore _))
+    (not (funcall endp (object iterator) state limit from-end))))
+
+(defmethod next ((iterator sequence-iterator))
+  (destructuring-bind (state limit from-end step endp element . _) (iterator iterator)
+    (declare (ignore limit endp _))
+    (prog1 (funcall element (object iterator) state)
+      (funcall step (object iterator) state from-end))))
+
+(defmethod (setf current) (value (iterator sequence-iterator))
+  (destructuring-bind (state limit from-end step endp element set . _) (iterator iterator)
+    (declare (ignore limit from-end step endp element _))
+    (funcall set value (object iterator) state)))
+
+(defmethod step-functions ((iterator sequence-iterator))
+  (let ((object (object iterator)))
+    (destructuring-bind (state limit from-end step endp element set . _) (iterator iterator)
+      (declare (ignore _))
+      (values
+       (lambda ()
+         (prog1 (funcall element object state)
+           (funcall step object state from-end)))
+       (lambda ()
+         (not (funcall endp object state limit from-end)))
+       (lambda (value)
+         (funcall set value object state))
+       (lambda ())))))
+
+(defmethod make-iterator ((sequence sequence) &key)
+  (make-instance 'sequence-iterator :object sequence))
+
 (defclass stream-iterator (iterator)
   ((buffer :accessor buffer)
    (index :initform 1 :accessor index)

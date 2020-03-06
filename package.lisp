@@ -23,6 +23,7 @@
    #:start
    #:array-iterator
    #:total-length
+   #:sequence-iterator
    #:stream-iterator
    #:buffer
    #:index

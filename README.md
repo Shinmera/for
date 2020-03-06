@@ -77,7 +77,7 @@ For also features a generic iterator construct that allows you to iterate over a
               (g over (make-string-input-stream "Hi!")))
       (print (list a b c d e f g)))
 
-Note that the `over` iterator construct can be drastically slower than a tailored iteration construct.
+`over` will also automatically support iterating over additional sequence types if your implementation supports the extensible sequences protocol. Note that the `over` iterator construct can be slower than a tailored iteration construct.
 
 Some iterators also support updating the current element. If you require doing so, you can use the `updating` binding.
 
