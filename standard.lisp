@@ -84,14 +84,20 @@
             (incf ,i))))
 
 (define-direct-binding over (var iterable &rest iterator-args)
-  (let ((iterator (gensym "ITERATOR")))
+  (let ((iterator (gensym "ITERATOR"))
+        (next (gensym "NEXT"))
+        (has-more (gensym "HAS-MORE"))
+        (update (gensym "UPDATE"))
+        (end (gensym "END")))
     (values
      `(with-interleaving
         (let (,@(lambda-fiddle:extract-lambda-vars (enlist var))
               (,iterator (make-iterator ,iterable ,@iterator-args))))
-        (unwind-protect* (end ,iterator)))
-     `(if (has-more ,iterator)
-          (update ,var (next ,iterator))
+        (multiple-value-bind (,next ,has-more ,update ,end) (step-functions ,iterator)
+          (declare (ignore ,update)))
+        (unwind-protect* (funcall ,end)))
+     `(if (funcall ,has-more)
+          (update ,var (funcall ,next))
           (end-for)))))
 
 (define-value-symbol-macro-binding updating ((var (current iterator)) iterable &rest iterator-args &aux (iterator (apply #'make-iterator iterable iterator-args)))
