@@ -30,7 +30,7 @@
 
 (defmacro for (&environment env bindings &body body)
   (let ((*environment* env))
-    (multiple-value-bind (bind-init bind-forms bind-exit) (convert-bindings bindings)
+    (multiple-value-bind (bind-init bind-forms bind-exit bind-post) (convert-bindings bindings)
       (multiple-value-bind (clause-init body-forms clause-exit) (convert-clauses body)
         `(with-interleaving
            ,@bind-init
@@ -38,7 +38,8 @@
            (with-for-block ()
              (with-for-tagbody
                  (progn ,@bind-forms
-                        ,@body-forms)
+                        ,@body-forms
+                        ,@bind-post)
                (return-for
                 ,@clause-exit
                 ,@bind-exit))))))))

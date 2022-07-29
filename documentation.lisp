@@ -35,6 +35,7 @@ Binding functions can return three values:
    require multiple surrounding forms, you can use WITH-INTERLEAVING.
 2. A form to run during each iteration. They will be run before any body forms.
 3. A form whose value is returned by the FOR.
+4. A form to run during each iteration. They will be run *after* any body forms.
 
 The arguments that the function receives are directly translated from the
 respective binding expression. One argument will always be passed in the

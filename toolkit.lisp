@@ -113,5 +113,6 @@
         for values = (funcall function expr)
         when (first values) collect (first values) into all-init
         when (second values) collect (second values) into all-forms
-        when (cddr values) collect (third values) into all-exit
-        finally (return (values all-init all-forms all-exit))))
+        when (third values) collect (third values) into all-exit
+        when (fourth values) collect (fourth values) into all-post
+        finally (return (values all-init all-forms all-exit all-post))))
