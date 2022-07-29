@@ -615,6 +615,9 @@ The stream is always closed when the For loop exits.")
   (binding =
     "Updates the var by the value of the given form every time.
 
+If :then is passed, the first form is only used to provide the first iteration's
+value of the var. Subsequent iterations will use the value of the :then form.
+
 Supports UPDATE.")
   
   (binding collecting
