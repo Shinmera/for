@@ -5,7 +5,7 @@
 |#
 
 (asdf:defsystem for
-  :version "1.1.0"
+  :version "1.2.0"
   :license "zlib"
   :author "Nicolas Hafner <shinmera@tymoon.eu>"
   :maintainer "Nicolas Hafner <shinmera@tymoon.eu>"
