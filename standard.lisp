@@ -189,8 +189,16 @@
      `(let ((,line (read-line ,stream NIL NIL)))
         (if ,line (setf ,var ,line) (end-for))))))
 
-(define-form-binding = (var form)
-  `(update ,var ,form))
+(define-direct-binding = (var form &key then)
+  (if then
+      (values
+       `(let ((,var ,form)))
+       NIL
+       NIL
+       `(update ,var ,then))
+      (values
+       `(let ((,var ,form)))
+       `(update ,var ,then))))
 
 (define-accumulation-binding collecting (var form &aux (head (cons NIL NIL)) (tail head))
   (declare (type list var)
