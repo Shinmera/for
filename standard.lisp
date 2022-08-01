@@ -198,7 +198,7 @@
        `(update ,var ,then))
       (values
        `(let ((,var ,form)))
-       `(update ,var ,then))))
+       `(update ,var ,form))))
 
 (define-accumulation-binding collecting (var form &aux (head (cons NIL NIL)) (tail head))
   (declare (type list var)
