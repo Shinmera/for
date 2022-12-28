@@ -191,13 +191,14 @@
 
 (define-direct-binding = (var form &key then)
   (if then
+      (let ((undef '#.(gensym "UNDEF")))
+        (values
+         `(let (,var ,undef))
+         `(if (eq ,var ,undef)
+              (update ,var ,form)
+              (update ,var ,then))))
       (values
-       `(let ((,var ,form)))
-       NIL
-       NIL
-       `(update ,var ,then))
-      (values
-       `(let ((,var ,form)))
+       `(let (,var))
        `(update ,var ,form))))
 
 (define-accumulation-binding collecting (var form &aux (head (cons NIL NIL)) (tail head))
