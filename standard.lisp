@@ -190,16 +190,18 @@
         (if ,line (setf ,var ,line) (end-for))))))
 
 (define-direct-binding = (var form &key then)
-  (if then
-      (let ((undef '#.(gensym "UNDEF")))
+  (let* ((undef '#.(gensym "UNDEF"))
+         (vars (loop for var in (lambda-fiddle:extract-lambda-vars (enlist var))
+                     collect `(,var ',undef))))
+    (if then
         (values
-         `(let (,var ,undef))
-         `(if (eq ,var ,undef)
+         `(let ,vars)
+         `(if (eq ,(caar vars) ,undef)
               (update ,var ,form)
-              (update ,var ,then))))
-      (values
-       `(let (,var))
-       `(update ,var ,form))))
+              (update ,var ,then)))
+        (values
+         `(let ,vars)
+         `(update ,var ,form)))))
 
 (define-accumulation-binding collecting (var form &aux (head (cons NIL NIL)) (tail head))
   (declare (type list var)
