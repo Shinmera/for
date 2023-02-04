@@ -657,10 +657,14 @@ This returns the var on END-FOR.")
   (binding maximizing
     "Sets the var to the maximum of the values returned by FORM so far each step.
 
+If KEY is passed, the comparison is performed by the result of the KEY function on each value.
+
 This returns the var on END-FOR.")
   
   (binding minimizing
     "Sets the var to the minimum of the values returned by FORM so far each step.
+
+If KEY is passed, the comparison is performed by the result of the KEY function on each value.
 
 This returns the var on END-FOR.")
   
@@ -674,7 +678,9 @@ As soon as FORM returns non-NIL the for is aborted with END-FOR and NIL is retur
   
   (clause thereis
     "If FORM never returns non-NIL, then NIL is returned.
-As soon as FORM returns non-NIL the for is aborted with END-FOR and the non-NIL value is returned.")
+As soon as FORM returns non-NIL the for is aborted with END-FOR and the non-NIL value is returned.
+
+If KEY is passed, the result of the KEY function on the VALUE is used for the non-NIL test.")
   
   (clause while
     "When FORM returns NIL, END-FOR is called.")

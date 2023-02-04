@@ -248,18 +248,18 @@
   (declare (type real var))
   `(incf ,var ,form))
 
-(define-accumulation-binding maximizing (var form)
-  (declare (type (or null real) var))
+(define-accumulation-binding maximizing (var form &key key)
   (let ((result (gensym "RESULT")))
     `(let ((,result ,form))
-       (when (or (not ,var) (< ,var ,result))
+       (when (or (not ,var) (< ,(if key `(funcall ,key ,var) var)
+                               ,(if key `(funcall ,key ,result) result)))
          (setf ,var ,result)))))
 
-(define-accumulation-binding minimizing (var form)
-  (declare (type (or null real) var))
+(define-accumulation-binding minimizing (var form &key key)
   (let ((result (gensym "RESULT")))
     `(let ((,result ,form))
-       (when (or (not ,var) (< ,result ,var))
+       (when (or (not ,var) (< ,(if key `(funcall ,key ,result) result)
+                               ,(if key `(funcall ,key ,var) var)))
          (setf ,var ,result)))))
 
 (define-simple-clause always (form &aux (result T))
@@ -270,10 +270,10 @@
   (values `(when ,form (setf ,result NIL) (end-for))
           result))
 
-(define-simple-clause thereis (form &aux (result NIL))
+(define-simple-clause thereis (form &key key &aux (result NIL))
   (let ((res (gensym "RES")))
     (values `(let ((,res ,form))
-               (when ,res (setf ,result ,res) (end-for)))
+               (when ,(if key res `(funcall ,key ,res)) (setf ,result ,res) (end-for)))
             result)))
 
 (define-simple-clause while (form)
