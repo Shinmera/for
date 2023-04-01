@@ -7,12 +7,19 @@
 (in-package #:org.shirakumo.for)
 
 (defun remove-bindings (bindings form)
-  (cond ((and (listp form) (find (first form) '(let let*)))
-         `(,(first form)
-           ,(loop for binding in (second form)
-                  unless (find (first binding) bindings :key #'car)
-                  collect binding)
-           ,@(cddr form)))
+  (cond ((consp form)
+         (case (car form)
+           ((let let*)
+            `(,(first form)
+              ,(loop for binding in (second form)
+                     unless (find (first binding) bindings :key #'car)
+                     collect binding)
+              ,@(cddr form)))
+           (with-interleaving
+             `(with-interleaving
+                ,@(loop for part in (rest form)
+                        collect (remove-bindings bindings part))))
+           (T form)))
         (T form)))
 
 (define-direct-binding being (var &rest sub-bindings)
