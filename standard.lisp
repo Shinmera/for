@@ -273,7 +273,7 @@
 (define-simple-clause thereis (form &key key &aux (result NIL))
   (let ((res (gensym "RES")))
     (values `(let ((,res ,form))
-               (when ,(if key res `(funcall ,key ,res)) (setf ,result ,res) (end-for)))
+               (when ,(if key `(funcall ,key ,res) res) (setf ,result ,res) (end-for)))
             result)))
 
 (define-simple-clause while (form)
