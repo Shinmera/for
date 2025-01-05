@@ -20,3 +20,4 @@
 (defmethod staple:definition-order ((_ clause)) 92)
 
 (setf (staple:packages :for) '(:for))
+(defmethod staple:subsystems ((sys (eql (asdf:find-system :for)))) ())
