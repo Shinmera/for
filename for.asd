@@ -4,9 +4,9 @@
   :author "Yukari Hafner <shinmera@tymoon.eu>"
   :maintainer "Yukari Hafner <shinmera@tymoon.eu>"
   :description "An extensible iteration macro library."
-  :homepage "https://Shinmera.github.io/for/"
-  :bug-tracker "https://github.com/Shinmera/for/issues"
-  :source-control (:git "https://github.com/Shinmera/for.git")
+  :homepage "https://shinmera.com/docs/for/"
+  :bug-tracker "https://shinmera.com/project/for/issues"
+  :source-control (:git "https://shinmera.com/project/for.git")
   :serial T
   :components ((:file "package")
                (:file "toolkit")
